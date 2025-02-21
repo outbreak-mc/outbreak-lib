@@ -8,7 +8,7 @@ tasks.wrapper {
     gradleVersion = "8.13"
 }
 
-group = "space.outbreak.lib"
+group = "space.outbreak.outbreaklib"
 version = "1.0-SNAPSHOT"
 
 allprojects {
@@ -32,17 +32,17 @@ allprojects {
     }
 }
 
-dependencies {
-    implementation(project(":utils"))
-    implementation(project(":paper"))
-}
-
-tasks.jar {
-    from(project(":utils").sourceSets.main.get().output)
-    from(project(":paper").sourceSets.main.get().output)
-
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
+// dependencies {
+//     implementation(project(":utils"))
+//     implementation(project(":paper"))
+// }
+//
+// tasks.jar {
+//     from(project(":utils").sourceSets.main.get().output)
+//     from(project(":paper").sourceSets.main.get().output)
+//
+//     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+// }
 
 kotlin {
     jvmToolchain(21)
