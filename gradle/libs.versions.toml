@@ -1,0 +1,30 @@
+[versions]
+kotlin-version = "2.0.21"
+paper-version = "1.20.1-R0.1-SNAPSHOT"
+paperweight-version = "2.0.0-beta.14"
+shadow-version = "9.0.0-beta4"
+pluginyml-version = "0.6.0"
+adventure-version = "4.19.0"
+apache-commons-text-version = "1.11.0"
+jackson-version = "2.18.2"
+buildconfig-version = "5.5.1"
+
+[libraries]
+paper = { module = "io.papermc.paper:paper-api", version.ref = "paper-version" }
+adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure-version" }
+adventure-text-logger = { module = "net.kyori:adventure-text-logger-slf4j", version.ref = "adventure-version" }
+adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure-version" }
+adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure-version" }
+adventure-text-serializer-plain = { module = "net.kyori:adventure-text-serializer-plain", version.ref = "adventure-version" }
+apache-commons-text = { module = "org.apache.commons:commons-text", version.ref = "apache-commons-text-version" }
+
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson-version" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson-version" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson-version" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow-version" }
+pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml-version" }
+paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight-version" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig-version" }
