@@ -14,6 +14,8 @@ version = "1.0-SNAPSHOT"
 allprojects {
     apply(plugin = "kotlin")
 
+    version = rootProject.version
+
     repositories {
         mavenCentral()
     }
