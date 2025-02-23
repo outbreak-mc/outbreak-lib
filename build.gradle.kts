@@ -8,7 +8,7 @@ tasks.wrapper {
     gradleVersion = "8.13"
 }
 
-group = "space.outbreak.outbreaklib"
+group = "space.outbreak.lib"
 version = "1.0-SNAPSHOT"
 
 allprojects {

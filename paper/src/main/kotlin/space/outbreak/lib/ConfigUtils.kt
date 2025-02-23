@@ -101,12 +101,12 @@ class ConfigUtils(
      * Загружает файлы локализации из папки плагина/messages.
      * Также дораспаковывает недостающие файлы локализаций из ресурсов.
      * */
-    fun loadLocales(): List<String> {
+    fun loadLocales(ld: LocaleData): List<String> {
         val path = Path.of("messages")
-        LocaleData.clear()
+        ld.clear()
 
         val locales = readLocales(path.resolve("locales")) { lang, data ->
-            LocaleData.load(lang, data)
+            ld.load(lang, data)
         }
 
         if (locales.isEmpty())
@@ -114,8 +114,8 @@ class ConfigUtils(
 
         val placeholdersConfig = readConfig(path.resolve("placeholders.yml"), PlaceholdersConfig::class.java)
 
-        LocaleData.addGlobalStaticPlaceholders(placeholdersConfig.staticPlaceholders)
-        LocaleData.addCustomColorTags(placeholdersConfig.customColorTags)
+        ld.addGlobalStaticPlaceholders(placeholdersConfig.staticPlaceholders)
+        ld.addCustomColorTags(placeholdersConfig.customColorTags)
 
         val tagsStr = placeholdersConfig.customColorTags.entries.toList().joinToString(", ") {
             "<${it.key}>${it.key}</${it.key}>"
