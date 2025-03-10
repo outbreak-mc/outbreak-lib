@@ -13,10 +13,10 @@ import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.PlaceholdersConfig
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
+import java.net.URI
 import java.nio.file.*
 import java.util.stream.Stream
-import kotlin.io.path.pathString
+import kotlin.io.path.exists
 
 class ConfigUtils(
     private val dataDir: Path,
@@ -45,51 +45,61 @@ class ConfigUtils(
      * Находит в ресурсах файл [resourcePath], распаковывает его в папку
      * плагина, читает его как yaml и парсит в объект типа [type]
      * */
-    fun <T> readConfig(resourcePath: Path, type: Class<T>): T {
+    fun <T> readConfig(resourcePath: URI, type: Class<T>): T {
         return yamlMapper.readValue(getResourceFile(resourcePath), type)
     }
 
-    fun writeConfig(resourcePath: Path, data: Any) {
+    private fun URI.toResourcePathString(): String {
+        return if (path.startsWith("/")) path.substring(1)
+        else path
+    }
+
+    private fun Path.toResourcePathString(): String {
+        val pstr = toUri().path
+        return if (pstr.startsWith("/")) pstr.substring(1)
+        else pstr
+    }
+
+    fun writeConfig(resourcePath: URI, data: Any) {
         yamlMapper.writeValue(getResourceFile(resourcePath), data)
     }
 
-    fun getResourceFile(path: Path): File {
-        val inputStream = object {}.javaClass.classLoader.getResourceAsStream(path.toString())
-        val outputFile = dataDir.resolve(path).toFile()
-        if (!outputFile.exists())
-            inputStream.use { input ->
-                FileOutputStream(outputFile).use { output ->
-                    input.copyTo(output)
-                }
-            }
-        return outputFile
+    fun getResourceFile(path: URI): File {
+        val outputFile = dataDir.resolve(path.path)
+        if (!outputFile.exists()) {
+            val inputStream = object {}.javaClass.classLoader.getResourceAsStream(path.path)
+                ?: throw FileNotFoundException("Resource not found: ${path}")
+            Files.copy(inputStream, outputFile)
+        }
+
+        return outputFile.toFile()
     }
 
-    fun getResourceFiles(path: String): Stream<Path> {
-        val uri = object {}.javaClass.getResource(path)!!.toURI()
+    fun getResourceFiles(path: URI): Stream<Path> {
+        val uri = object {}.javaClass.getResource(path.path)!!.toURI()
         val dirPath = try {
             Paths.get(uri)
         } catch (e: FileSystemNotFoundException) {
             // If this is thrown, then it means that we are running the JAR directly (example: not from an IDE)
             val env = mutableMapOf<String, String>()
-            FileSystems.newFileSystem(uri, env).getPath(path)
+            FileSystems.newFileSystem(uri, env).getPath(path.path)
         }
 
         return Files.list(dirPath)
     }
 
     private fun readLocales(
-        path: Path,
+        path: URI,
         func: (String, Map<String, Any>) -> Unit,
     ): List<String> {
         if (path.isAbsolute)
             throw IllegalArgumentException("Path must not be absolute")
         val out = mutableListOf<String>()
         // Сначала распаковываем файлы, которые только в ресурсах
-        val resPath = Path.of("/").resolve(path).pathString.replace("\\", "/")
-        getResourceFiles(resPath).forEach { getResourceFile(it) }
+        val resPath = URI("/messages").resolve(path)
+        getResourceFiles(resPath).forEach { getResourceFile(resPath.resolve(it.toUri())) }
         // Затем читаем с диска
-        dataDir.resolve(path).toFile().listFiles()?.filter { it.name.endsWith(".yml") }?.forEach {
+        dataDir.resolve(path.path).toFile().listFiles()?.filter { it.name.endsWith(".yml") }?.forEach {
             val (name, _) = it.name.split(".", limit = 2)
             func(name, yamlMapper.readValue(it, object : TypeReference<Map<String, Any>>() {}))
             out.add(name)
@@ -102,7 +112,7 @@ class ConfigUtils(
      * Также дораспаковывает недостающие файлы локализаций из ресурсов.
      * */
     fun loadLocales(ld: LocaleData): List<String> {
-        val path = Path.of("messages")
+        val path = URI("/messages")
         ld.clear()
 
         val locales = readLocales(path.resolve("locales")) { lang, data ->

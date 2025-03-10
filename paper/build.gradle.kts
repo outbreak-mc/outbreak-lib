@@ -3,9 +3,15 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":utils"))
-    // compileOnly(rootProject.libs.paper)
+    api(project(":utils"))
 }
+
+tasks.jar {
+    from(project(":utils").sourceSets.main.get().output)
+
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 
 publishing {
     publications {

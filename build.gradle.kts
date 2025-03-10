@@ -21,14 +21,14 @@ allprojects {
     }
 
     dependencies {
-        implementation(rootProject.libs.adventure.api)
-        implementation(rootProject.libs.adventure.text.minimessage)
-        implementation(rootProject.libs.adventure.text.logger)
-        implementation(rootProject.libs.apache.commons.text)
+        api(rootProject.libs.adventure.api)
+        api(rootProject.libs.adventure.text.minimessage)
+        api(rootProject.libs.adventure.text.logger)
+        api(rootProject.libs.apache.commons.text)
 
-        implementation(rootProject.libs.jackson.databind)
-        implementation(rootProject.libs.jackson.module.kotlin)
-        implementation(rootProject.libs.jackson.dataformat.yaml)
+        api(rootProject.libs.jackson.databind)
+        api(rootProject.libs.jackson.module.kotlin)
+        api(rootProject.libs.jackson.dataformat.yaml)
     }
 }
 
