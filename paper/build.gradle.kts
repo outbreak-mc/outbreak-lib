@@ -1,8 +1,10 @@
 plugins {
     `maven-publish`
+    `java-library`
 }
 
 dependencies {
+    compileOnlyApi(rootProject.libs.paper)
     api(project(":utils"))
 }
 

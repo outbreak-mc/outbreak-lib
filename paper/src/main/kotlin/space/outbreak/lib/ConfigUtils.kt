@@ -14,9 +14,12 @@ import space.outbreak.lib.locale.PlaceholdersConfig
 import java.io.File
 import java.io.FileNotFoundException
 import java.net.URI
-import java.nio.file.*
-import java.util.stream.Stream
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.absolute
+import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 
 class ConfigUtils(
     private val dataDir: Path,
@@ -45,8 +48,8 @@ class ConfigUtils(
      * Находит в ресурсах файл [resourcePath], распаковывает его в папку
      * плагина, читает его как yaml и парсит в объект типа [type]
      * */
-    fun <T> readConfig(resourcePath: URI, type: Class<T>): T {
-        return yamlMapper.readValue(getResourceFile(resourcePath), type)
+    fun <T> readConfig(resourcePath: String, type: Class<T>): T {
+        return yamlMapper.readValue(extractAndGetResourceFile(resourcePath), type)
     }
 
     private fun URI.toResourcePathString(): String {
@@ -60,50 +63,65 @@ class ConfigUtils(
         else pstr
     }
 
-    fun writeConfig(resourcePath: URI, data: Any) {
-        yamlMapper.writeValue(getResourceFile(resourcePath), data)
+    fun writeConfig(resourcePath: String, data: Any) {
+        yamlMapper.writeValue(extractAndGetResourceFile(resourcePath), data)
     }
 
-    fun getResourceFile(path: URI): File {
-        val outputFile = dataDir.resolve(path.path)
+    fun extractAndGetResourceFile(path: String): File {
+        val outputFile = dataDir.absolute().resolve(path.trimStart('/'))
+        if (outputFile.isDirectory() && !outputFile.exists()) {
+            outputFile.createDirectories()
+        } else if (!outputFile.isDirectory() && !outputFile.parent.exists()) {
+            outputFile.parent.createDirectories()
+        }
+
         if (!outputFile.exists()) {
-            val inputStream = object {}.javaClass.classLoader.getResourceAsStream(path.path)
-                ?: throw FileNotFoundException("Resource not found: ${path}")
+            val resourcePath = path.trimStart('/')
+            val inputStream = object {}.javaClass.classLoader.getResourceAsStream(resourcePath)
+                ?: throw FileNotFoundException("Resource not found: ${resourcePath}")
             Files.copy(inputStream, outputFile)
         }
 
         return outputFile.toFile()
     }
 
-    fun getResourceFiles(path: URI): Stream<Path> {
-        val uri = object {}.javaClass.getResource(path.path)!!.toURI()
-        val dirPath = try {
-            Paths.get(uri)
-        } catch (e: FileSystemNotFoundException) {
-            // If this is thrown, then it means that we are running the JAR directly (example: not from an IDE)
-            val env = mutableMapOf<String, String>()
-            FileSystems.newFileSystem(uri, env).getPath(path.path)
-        }
 
-        return Files.list(dirPath)
-    }
+    // fun getResourceFiles(path: String): Stream<Path> {
+    //     val resourceUrl = object {}.javaClass.getResource(path)
+    //         ?: throw FileNotFoundException("Resource not found: $path")
+    //
+    //     return try {
+    //         val uri = resourceUrl.toURI()
+    //
+    //         if (uri.scheme == "jar") {
+    //             val fileSystem = try {
+    //                 FileSystems.newFileSystem(uri, emptyMap<String, Any>())
+    //             } catch (e: FileSystemAlreadyExistsException) {
+    //                 FileSystems.getFileSystem(uri)
+    //             }
+    //
+    //             val dirPath = fileSystem.getPath(path)
+    //             Files.list(dirPath).map {
+    //                 it
+    //             }
+    //         } else {
+    //             Files.list(Paths.get(uri)).map { it }
+    //         }
+    //     } catch (e: IOException) {
+    //         throw RuntimeException("Ошибка чтения ресурсов в пути: $path", e)
+    //     }
+    // }
 
-    private fun readLocales(
-        path: URI,
+    private fun readLocaleFiles(
         func: (String, Map<String, Any>) -> Unit,
     ): List<String> {
-        if (path.isAbsolute)
-            throw IllegalArgumentException("Path must not be absolute")
         val out = mutableListOf<String>()
-        // Сначала распаковываем файлы, которые только в ресурсах
-        val resPath = URI("/messages").resolve(path)
-        getResourceFiles(resPath).forEach { getResourceFile(resPath.resolve(it.toUri())) }
-        // Затем читаем с диска
-        dataDir.resolve(path.path).toFile().listFiles()?.filter { it.name.endsWith(".yml") }?.forEach {
-            val (name, _) = it.name.split(".", limit = 2)
-            func(name, yamlMapper.readValue(it, object : TypeReference<Map<String, Any>>() {}))
-            out.add(name)
-        }
+        dataDir.resolve("messages").resolve("locales").toFile().listFiles()?.filter { it.name.endsWith(".yml") }
+            ?.forEach {
+                val (name, _) = it.name.split(".", limit = 2)
+                func(name, yamlMapper.readValue(it, object : TypeReference<Map<String, Any>>() {}))
+                out.add(name)
+            }
         return out
     }
 
@@ -112,17 +130,19 @@ class ConfigUtils(
      * Также дораспаковывает недостающие файлы локализаций из ресурсов.
      * */
     fun loadLocales(ld: LocaleData): List<String> {
-        val path = URI("/messages")
+        val msgsPath = "/messages"
         ld.clear()
 
-        val locales = readLocales(path.resolve("locales")) { lang, data ->
+        Res.extractResourcesFolder(msgsPath, dataDir.toFile())
+
+        val locales = readLocaleFiles { lang, data ->
             ld.load(lang, data)
         }
 
         if (locales.isEmpty())
-            throw FileNotFoundException("No locales found neither in resources nor in plugin folder${path}!")
+            throw FileNotFoundException("No locales found neither in resources nor in plugin folder${msgsPath}!")
 
-        val placeholdersConfig = readConfig(path.resolve("placeholders.yml"), PlaceholdersConfig::class.java)
+        val placeholdersConfig = readConfig("${msgsPath}/placeholders.yml", PlaceholdersConfig::class.java)
 
         ld.addGlobalStaticPlaceholders(placeholdersConfig.staticPlaceholders)
         ld.addCustomColorTags(placeholdersConfig.customColorTags)

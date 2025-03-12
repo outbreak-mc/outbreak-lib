@@ -1,5 +1,6 @@
 package space.outbreak.lib.locale
 
+import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextReplacementConfig
 import net.kyori.adventure.text.format.TextDecoration
@@ -59,6 +60,14 @@ interface ILocaleEnum {
 
     fun raw(vararg replacing: Pair<String, Any>): String {
         return stringReplaceAll(byPath(lang = data.defaultLang, path = name) ?: return name, mapOf(*replacing))
+    }
+
+    fun send(audience: Audience, vararg replacing: Pair<String, Any>) {
+        audience.sendMessage(comp(null, *replacing))
+    }
+
+    fun sendActionBar(audience: Audience, vararg replacing: Pair<String, Any>) {
+        audience.sendActionBar(comp(null, *replacing))
     }
 
     companion object {
