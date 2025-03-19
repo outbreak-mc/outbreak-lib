@@ -19,9 +19,9 @@ dependencies {
     compileOnlyApi(rootProject.libs.adventure.text.minimessage)
     compileOnlyApi(rootProject.libs.adventure.text.logger)
 
-    api(rootProject.libs.apache.commons.text)
+    compileOnlyApi(rootProject.libs.apache.commons.text)
 
-    api(rootProject.libs.jackson.databind)
-    api(rootProject.libs.jackson.module.kotlin)
-    api(rootProject.libs.jackson.dataformat.yaml)
+    compileOnlyApi(rootProject.libs.jackson.databind)
+    compileOnlyApi(rootProject.libs.jackson.module.kotlin)
+    compileOnlyApi(rootProject.libs.jackson.dataformat.yaml)
 }

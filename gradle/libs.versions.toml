@@ -8,6 +8,7 @@ adventure-version = "4.19.0"
 apache-commons-text-version = "1.11.0"
 jackson-version = "2.18.2"
 buildconfig-version = "5.5.1"
+commandapi-version = "9.7.0"
 
 [libraries]
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper-version" }
@@ -17,6 +18,7 @@ adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", 
 adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure-version" }
 adventure-text-serializer-plain = { module = "net.kyori:adventure-text-serializer-plain", version.ref = "adventure-version" }
 apache-commons-text = { module = "org.apache.commons:commons-text", version.ref = "apache-commons-text-version" }
+commandapi = { module = "dev.jorel:commandapi-bukkit-core", version.ref = "commandapi-version" }
 
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson-version" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson-version" }

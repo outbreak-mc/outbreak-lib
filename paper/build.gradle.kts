@@ -4,7 +4,8 @@ plugins {
 }
 
 dependencies {
-    compileOnlyApi(rootProject.libs.paper)
+    compileOnly(rootProject.libs.paper)
+    compileOnly(rootProject.libs.commandapi)
     api(project(":utils"))
 }
 

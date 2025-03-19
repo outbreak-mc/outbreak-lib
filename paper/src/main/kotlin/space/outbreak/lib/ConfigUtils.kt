@@ -8,6 +8,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger
+import org.bukkit.plugin.java.JavaPlugin
 import space.outbreak.lib.locale.ILocaleEnum
 import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.PlaceholdersConfig
@@ -24,6 +25,8 @@ import kotlin.io.path.isDirectory
 class ConfigUtils(
     private val dataDir: Path,
 ) {
+    constructor(plugin: JavaPlugin) : this(plugin.dataFolder.toPath())
+
     private val yamlMapper: ObjectMapper = YAMLMapper.builder()
         .configure(MapperFeature.IGNORE_DUPLICATE_MODULE_REGISTRATIONS, true)
         .build()
