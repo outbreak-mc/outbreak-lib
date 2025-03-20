@@ -11,7 +11,7 @@ group = "${rootProject.group}.plugin"
 
 bukkit {
     version = rootProject.version.toString()
-    name = "OutbreakLibPlugin"
+    name = "OutbreakLib"
     main = "${group}.OutbreakLibPlugin"
     apiVersion = "1.21"
     authors = listOf("OUTBREAK")

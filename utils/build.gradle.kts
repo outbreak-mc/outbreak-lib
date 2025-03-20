@@ -20,8 +20,4 @@ dependencies {
     compileOnlyApi(rootProject.libs.adventure.text.logger)
 
     compileOnlyApi(rootProject.libs.apache.commons.text)
-
-    compileOnlyApi(rootProject.libs.jackson.databind)
-    compileOnlyApi(rootProject.libs.jackson.module.kotlin)
-    compileOnlyApi(rootProject.libs.jackson.dataformat.yaml)
 }
