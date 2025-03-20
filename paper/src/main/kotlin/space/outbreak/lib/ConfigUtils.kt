@@ -27,7 +27,7 @@ class ConfigUtils(
 ) {
     constructor(plugin: JavaPlugin) : this(plugin.dataFolder.toPath())
 
-    private val yamlMapper: ObjectMapper = YAMLMapper.builder()
+    val yamlMapper: ObjectMapper = YAMLMapper.builder()
         .configure(MapperFeature.IGNORE_DUPLICATE_MODULE_REGISTRATIONS, true)
         .build()
         .registerModule(
