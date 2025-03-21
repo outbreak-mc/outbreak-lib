@@ -24,9 +24,9 @@ allprojects {
     }
 
     dependencies {
-        compileOnlyApi(rootProject.libs.jackson.databind)
-        compileOnlyApi(rootProject.libs.jackson.module.kotlin)
-        compileOnlyApi(rootProject.libs.jackson.dataformat.yaml)
+        api(rootProject.libs.jackson.databind)
+        api(rootProject.libs.jackson.module.kotlin)
+        api(rootProject.libs.jackson.dataformat.yaml)
     }
 }
 

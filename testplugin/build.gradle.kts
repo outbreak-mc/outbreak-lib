@@ -22,9 +22,9 @@ bukkit {
 
     libraries = listOf(
         rootProject.libs.apache.commons.text.get().toString(),
-        rootProject.libs.jackson.databind.get().toString(),
-        rootProject.libs.jackson.module.kotlin.get().toString(),
-        rootProject.libs.jackson.dataformat.yaml.get().toString()
+        // rootProject.libs.jackson.databind.get().toString(),
+        // rootProject.libs.jackson.module.kotlin.get().toString(),
+        // rootProject.libs.jackson.dataformat.yaml.get().toString()
     )
 }
 
