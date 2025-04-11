@@ -8,7 +8,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger
-import org.bukkit.plugin.java.JavaPlugin
 import space.outbreak.lib.locale.ILocaleEnum
 import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.PlaceholdersConfig
@@ -25,7 +24,7 @@ import kotlin.io.path.isDirectory
 class ConfigUtils(
     private val dataDir: Path,
 ) {
-    constructor(plugin: JavaPlugin) : this(plugin.dataFolder.toPath())
+    // constructor(plugin: JavaPlugin) : this(plugin.dataFolder.toPath())
 
     val yamlMapper: ObjectMapper = YAMLMapper.builder()
         .configure(MapperFeature.IGNORE_DUPLICATE_MODULE_REGISTRATIONS, true)
@@ -134,12 +133,12 @@ class ConfigUtils(
      * */
     fun loadLocales(ld: LocaleData): List<String> {
         val msgsPath = "/messages"
-        ld.clear()
+        LocaleData.clear()
 
         Res.extractResourcesFolder(msgsPath, dataDir.toFile())
 
         val locales = readLocaleFiles { lang, data ->
-            ld.load(lang, data)
+            LocaleData.load(lang, data)
         }
 
         if (locales.isEmpty())
@@ -147,8 +146,8 @@ class ConfigUtils(
 
         val placeholdersConfig = readConfig("${msgsPath}/placeholders.yml", PlaceholdersConfig::class.java)
 
-        ld.addGlobalStaticPlaceholders(placeholdersConfig.staticPlaceholders)
-        ld.addCustomColorTags(placeholdersConfig.customColorTags)
+        LocaleData.addGlobalStaticPlaceholders(placeholdersConfig.staticPlaceholders)
+        LocaleData.addCustomColorTags(placeholdersConfig.customColorTags)
 
         val tagsStr = placeholdersConfig.customColorTags.entries.toList().joinToString(", ") {
             "<${it.key}>${it.key}</${it.key}>"
