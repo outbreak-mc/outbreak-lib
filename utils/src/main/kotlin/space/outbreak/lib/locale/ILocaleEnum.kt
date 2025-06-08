@@ -117,7 +117,7 @@ interface ILocaleEnum {
         fun process(text: String, lang: String?, vararg replacing: Pair<String, Any>): Component {
             val mapComps = mutableMapOf<String, Component>()
             val mapStrings = data.placeholdersGlobal.toMutableMap()
-            data.placeholders[lang ?: data.defaultLang]?.let { mapStrings.putAll(it) }
+            data.placeholdersLangSpecific[lang ?: data.defaultLang]?.let { mapStrings.putAll(it) }
 
             for (pair in replacing) {
                 if (pair.second is Component)

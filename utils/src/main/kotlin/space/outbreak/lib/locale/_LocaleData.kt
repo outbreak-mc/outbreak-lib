@@ -9,11 +9,19 @@ import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
 @Suppress("MemberVisibilityCanBePrivate", "ClassName")
 internal class _LocaleData {
     internal val compiledTree: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
-    internal val placeholders: LangSpecificStaticPlaceholders = mutableMapOf()
+    internal val placeholdersLangSpecific: LangSpecificStaticPlaceholders = mutableMapOf()
     internal val placeholdersGlobal: StaticPlaceholders = mutableMapOf()
     internal val customColorTags: MutableMap<String, String> = mutableMapOf()
 
     internal lateinit var serializer: MiniMessage
+
+    fun removeLang(lang: String) {
+        compiledTree.remove(lang)
+    }
+
+    fun removeLangPlaceholders(lang: String) {
+        placeholdersLangSpecific.remove(lang)
+    }
 
     fun recalculateSerializer() {
         val customColorTagsResolvers = customColorTags.mapNotNull { (tag, colorValue) ->
@@ -105,7 +113,7 @@ internal class _LocaleData {
     /** Удаляет все загруженные словари, плейсхолдеры и прочие данные */
     fun clear() {
         compiledTree.clear()
-        placeholders.clear()
+        placeholdersLangSpecific.clear()
         placeholdersGlobal.clear()
         customColorTags.clear()
         defaultLang = ""
