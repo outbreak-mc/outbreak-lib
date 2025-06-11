@@ -6,9 +6,9 @@ shadow-version = "9.0.0-beta4"
 pluginyml-version = "0.6.0"
 adventure-version = "4.19.0"
 apache-commons-text-version = "1.11.0"
-jackson-version = "2.18.2"
 buildconfig-version = "5.5.1"
 commandapi-version = "9.7.0"
+snakeyaml-version = "2.2"
 
 [libraries]
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper-version" }
@@ -20,9 +20,7 @@ adventure-text-serializer-plain = { module = "net.kyori:adventure-text-serialize
 apache-commons-text = { module = "org.apache.commons:commons-text", version.ref = "apache-commons-text-version" }
 commandapi = { module = "dev.jorel:commandapi-bukkit-core", version.ref = "commandapi-version" }
 
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson-version" }
-jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson-version" }
-jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson-version" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml-version" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }

@@ -11,4 +11,3 @@ plugins {
 rootProject.name = "OutbreakLib"
 include("utils")
 include("paper")
-include("testplugin")

@@ -1,8 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     `java-library`
-    // alias(libs.plugins.shadow)
-    // alias(libs.plugins.buildconfig)
 }
 
 tasks.wrapper {
@@ -25,10 +23,7 @@ allprojects {
 
     dependencies {
         compileOnly(kotlin("stdlib"))
-
-        api(rootProject.libs.jackson.databind)
-        api(rootProject.libs.jackson.module.kotlin)
-        api(rootProject.libs.jackson.dataformat.yaml)
+        compileOnly(rootProject.libs.snakeyaml)
     }
 }
 

@@ -1,13 +1,12 @@
 package space.outbreak.lib.locale
 
-import com.fasterxml.jackson.core.type.TypeReference
 import net.kyori.adventure.text.minimessage.MiniMessage
-import space.outbreak.lib.createYamlMapper
+import org.yaml.snakeyaml.Yaml
 import java.io.File
 
 object LocaleData {
     internal val data = _LocaleData()
-    private val yamlMapper = createYamlMapper()
+    private val yaml = Yaml()
 
     fun clear() {
         data.clear()
@@ -18,8 +17,7 @@ object LocaleData {
     }
 
     fun load(lang: String, file: File) {
-        val f = this.yamlMapper.readValue(file, object : TypeReference<Map<String, Any>>() {})
-        data.load(lang, f)
+        data.load(lang, yaml.load(file.inputStream()))
     }
 
     fun removeLang(lang: String) {

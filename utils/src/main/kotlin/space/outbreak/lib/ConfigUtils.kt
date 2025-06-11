@@ -1,6 +1,6 @@
 package space.outbreak.lib
 
-import com.fasterxml.jackson.core.type.TypeReference
+import org.yaml.snakeyaml.Yaml
 import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.PlaceholdersConfig
 import java.io.File
@@ -15,17 +15,19 @@ import kotlin.io.path.isDirectory
 class ConfigUtils(
     private val dataDir: Path,
 ) {
+    private val yaml = Yaml()
+
     /**
      * Находит в ресурсах файл [resourcePath], распаковывает его в папку
      * плагина, читает его как yaml и парсит в объект типа [type]
      * */
     fun <T> readConfig(resourcePath: String, type: Class<T>): T {
-        return yamlMapper.readValue(extractAndGetResourceFile(resourcePath), type)
+        return yaml.loadAs(extractAndGetResourceFile(resourcePath).inputStream(), type)
     }
 
-    fun writeConfig(resourcePath: String, data: Any) {
-        yamlMapper.writeValue(extractAndGetResourceFile(resourcePath), data)
-    }
+    // fun writeConfig(resourcePath: String, data: Any) {
+    //     yamlMapper.writeValue(extractAndGetResourceFile(resourcePath), data)
+    // }
 
     fun extractAndGetResourceFile(path: String): File {
         val outputFile = dataDir.absolute().resolve(path.trimStart('/'))
@@ -50,9 +52,9 @@ class ConfigUtils(
     ): List<String> {
         val out = mutableListOf<String>()
         dataDir.resolve("messages").resolve("locales").toFile().listFiles()?.filter { it.name.endsWith(".yml") }
-            ?.forEach {
-                val (name, _) = it.name.split(".", limit = 2)
-                func(name, yamlMapper.readValue(it, object : TypeReference<Map<String, Any>>() {}))
+            ?.forEach { f ->
+                val (name, _) = f.name.split(".", limit = 2)
+                func(name, yaml.load(f.inputStream()))
                 out.add(name)
             }
         return out
@@ -77,8 +79,8 @@ class ConfigUtils(
 
         val placeholdersConfig = readConfig("${msgsPath}/placeholders.yml", PlaceholdersConfig::class.java)
 
-        LocaleData.addGlobalStaticPlaceholders(placeholdersConfig.staticPlaceholders)
-        LocaleData.addCustomColorTags(placeholdersConfig.customColorTags)
+        LocaleData.addGlobalStaticPlaceholders(placeholdersConfig.`static-placeholders`)
+        LocaleData.addCustomColorTags(placeholdersConfig.`custom-color-tags`)
 
         return locales
     }
