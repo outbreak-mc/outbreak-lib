@@ -24,6 +24,8 @@ allprojects {
     }
 
     dependencies {
+        compileOnly(kotlin("stdlib"))
+
         api(rootProject.libs.jackson.databind)
         api(rootProject.libs.jackson.module.kotlin)
         api(rootProject.libs.jackson.dataformat.yaml)
