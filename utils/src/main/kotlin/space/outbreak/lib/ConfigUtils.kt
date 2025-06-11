@@ -88,9 +88,9 @@ class ConfigUtils(
      * и читает данные из него в [LocaleData] как язык [lang]. Существующие данные этого
      * языка предварительно очищаются.
      * */
-    fun readLocale(file: String = "locale.yml", lang: String) {
+    fun loadSingleLocaleFile(file: String = "locale.yml", lang: String) {
         LocaleData.removeLang(lang)
-        Res.extractResourcesFolder(file, dataDir.toFile())
+        Res.saveResource(file, dataDir.toFile(), false)
         LocaleData.load(lang, dataDir.resolve(file).toFile())
     }
 }
