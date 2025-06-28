@@ -10,64 +10,60 @@ import org.apache.commons.text.StringSubstitutor
 interface ILocaleEnum {
     val name: String
 
-    /**
-     * Оборачивает компонент в компонент с явно отключенным курсивом.
-     * Полезно, чтобы убирать курсив из описаний и названий предметов.
-     * */
-    fun deitalize(comp: Component): Component {
-        return Component.empty().decoration(TextDecoration.ITALIC, false).children(mutableListOf(comp))
-    }
-
-    fun processAndDeitalize(text: String, lang: String?, vararg placeholders: Pair<String, Any>): Component {
+    fun processAndDeitalize(text: String, lang: String? = null, vararg placeholders: Pair<String, Any>): Component {
         return deitalize(process(text, lang ?: data.defaultLang, *placeholders))
     }
 
-    fun processAndDeitalize(text: String, vararg placeholders: Pair<String, Any>): Component {
-        return deitalize(process(text, data.defaultLang, *placeholders))
-    }
-
-    fun comp(lang: String?, vararg replacing: Pair<String, Any>): Component {
-        return process(rawOrNull(lang) ?: raw(data.defaultLang), lang, *replacing)
+    fun comp(lang: String? = null, vararg replacing: Pair<String, Any>): Component {
+        return process(raw(lang), lang, *replacing)
     }
 
     fun comp(vararg replacing: Pair<String, Any>): Component {
-        return process(raw(data.defaultLang), data.defaultLang, *replacing)
+        return process(raw(null), null, *replacing)
     }
 
-    fun compOrNull(lang: String?, vararg replacing: Pair<String, Any>): Component? {
+    fun compOrNull(lang: String? = null, vararg replacing: Pair<String, Any>): Component? {
         return process(rawOrNull(lang) ?: return null, lang, *replacing)
     }
 
     fun compOrNull(vararg replacing: Pair<String, Any>): Component? {
-        return process(rawOrNull(data.defaultLang) ?: return null, data.defaultLang, *replacing)
+        return process(rawOrNull(null) ?: return null, null, *replacing)
     }
 
-    private fun byPath(path: String, lang: String?): String? {
-        return data.compiledTree[lang ?: data.defaultLang]?.get(path)
-    }
-
-    fun rawOrNull(lang: String?, vararg replacing: Pair<String, Any>): String? {
-        return stringReplaceAll(byPath(lang = lang ?: data.defaultLang, path = name) ?: return null, mapOf(*replacing))
+    fun rawOrNull(lang: String? = null, vararg replacing: Pair<String, Any>): String? {
+        return stringReplaceAll(byPath(lang = lang, path = name) ?: return null, mapOf(*replacing))
     }
 
     fun rawOrNull(vararg replacing: Pair<String, Any>): String? {
-        return stringReplaceAll(byPath(lang = data.defaultLang, path = name) ?: return null, mapOf(*replacing))
+        return stringReplaceAll(byPath(lang = null, path = name) ?: return null, mapOf(*replacing))
     }
 
-    fun raw(lang: String?, vararg replacing: Pair<String, Any>): String {
-        return stringReplaceAll(byPath(lang = lang ?: data.defaultLang, path = name) ?: return name, mapOf(*replacing))
+    fun raw(lang: String? = null, vararg replacing: Pair<String, Any>): String {
+        return stringReplaceAll(byPath(lang = lang, path = name) ?: return name, mapOf(*replacing))
     }
 
     fun raw(vararg replacing: Pair<String, Any>): String {
-        return stringReplaceAll(byPath(lang = data.defaultLang, path = name) ?: return name, mapOf(*replacing))
+        return stringReplaceAll(byPath(lang = null, path = name) ?: return name, mapOf(*replacing))
+    }
+
+    fun send(audience: Audience, lang: String?, vararg replacing: Pair<String, Any>) {
+        audience.sendMessage(comp(lang, *replacing))
     }
 
     fun send(audience: Audience, vararg replacing: Pair<String, Any>) {
         audience.sendMessage(comp(null, *replacing))
     }
 
+    fun sendActionBar(audience: Audience, lang: String? = null, vararg replacing: Pair<String, Any>) {
+        audience.sendActionBar(comp(lang, *replacing))
+    }
+
     fun sendActionBar(audience: Audience, vararg replacing: Pair<String, Any>) {
         audience.sendActionBar(comp(null, *replacing))
+    }
+
+    fun use(vararg replacing: Pair<String, Any>): PreparedLocale {
+        return PreparedLocale(this, replacing)
     }
 
     companion object {
@@ -94,6 +90,11 @@ interface ILocaleEnum {
         }
 
         @JvmStatic
+        fun byPath(path: String, lang: String?): String? {
+            return data.compiledTree[lang ?: data.defaultLang]?.get(path)
+        }
+
+        @JvmStatic
         fun _process(
             text: String,
             mapStrings: Map<String, Any?>,
@@ -113,8 +114,33 @@ interface ILocaleEnum {
             return comp
         }
 
+        /**
+         * Оборачивает компонент в компонент с явно отключенным курсивом.
+         * Полезно, чтобы убирать курсив из описаний и названий предметов.
+         * */
+        @JvmStatic
+        fun deitalize(comp: Component): Component {
+            return Component.empty().decoration(TextDecoration.ITALIC, false).children(mutableListOf(comp))
+        }
+
         @JvmStatic
         fun process(text: String, lang: String?, vararg replacing: Pair<String, Any>): Component {
+            val mapComps = mutableMapOf<String, Component>()
+            val mapStrings = data.placeholdersGlobal.toMutableMap()
+            data.placeholdersLangSpecific[lang ?: data.defaultLang]?.let { mapStrings.putAll(it) }
+
+            for (pair in replacing) {
+                if (pair.second is Component)
+                    mapComps[pair.first] = pair.second as Component
+                else
+                    mapStrings[pair.first] = pair.second.toString()
+            }
+
+            return _process(text, mapStrings, mapComps)
+        }
+
+        @JvmStatic
+        fun process(text: String, lang: String?, replacing: Collection<Pair<String, Any>>): Component {
             val mapComps = mutableMapOf<String, Component>()
             val mapStrings = data.placeholdersGlobal.toMutableMap()
             data.placeholdersLangSpecific[lang ?: data.defaultLang]?.let { mapStrings.putAll(it) }

@@ -4,21 +4,21 @@ import net.kyori.adventure.text.logger.slf4j.ComponentLogger
 
 
 fun ComponentLogger.info(msg: ILocaleEnum, vararg replacing: Pair<String, Any>) {
-    info(msg.comp(*replacing))
+    info(msg.comp(null, *replacing))
 }
 
 fun ComponentLogger.debug(msg: ILocaleEnum, vararg replacing: Pair<String, Any>) {
-    debug(msg.comp(*replacing))
+    debug(msg.comp(null, *replacing))
 }
 
 fun ComponentLogger.trace(msg: ILocaleEnum, vararg replacing: Pair<String, Any>) {
-    trace(msg.comp(*replacing))
+    trace(msg.comp(null, *replacing))
 }
 
 fun ComponentLogger.warn(msg: ILocaleEnum, vararg replacing: Pair<String, Any>) {
-    warn(msg.comp(*replacing))
+    warn(msg.comp(null, *replacing))
 }
 
 fun ComponentLogger.error(msg: ILocaleEnum, vararg replacing: Pair<String, Any>) {
-    error(msg.comp(*replacing))
+    error(msg.comp(null, *replacing))
 }

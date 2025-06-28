@@ -37,7 +37,7 @@ object LocaleData {
         data.recalculateSerializer()
     }
 
-    var defaultLang: String
+    var defaultLang: String?
         get() = data.defaultLang
         set(value) {
             data.defaultLang = value

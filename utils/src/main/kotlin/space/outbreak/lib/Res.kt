@@ -36,7 +36,6 @@ object Res {
 
     fun extractResourcesFolder(path: String, toDir: File) {
         getResourceFiles(path).forEach {
-            println(it)
             if (!it.isDirectory())
                 saveResource("$it", toDir, false)
             else

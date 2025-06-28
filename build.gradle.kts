@@ -23,6 +23,7 @@ allprojects {
 
     dependencies {
         compileOnly(kotlin("stdlib"))
+        compileOnly(kotlin("reflect"))
         compileOnly(rootProject.libs.snakeyaml)
     }
 }

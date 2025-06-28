@@ -93,12 +93,12 @@ internal class _LocaleData {
      * Возвращает язык по умолчанию. Если язык всего один, всегда возвращает его.
      * @throws IllegalArgumentException при попытке установки незагруженного языка
      * */
-    var defaultLang: String = ""
+    var defaultLang: String? = ""
         get() {
             if (field != "")
                 return field
             else
-                field = languages.first()!!
+                field = if (languages.isNotEmpty()) languages.first() else null
             return field
         }
         set(value) {

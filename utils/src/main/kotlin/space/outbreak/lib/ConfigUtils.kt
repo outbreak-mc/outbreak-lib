@@ -1,6 +1,10 @@
 package space.outbreak.lib
 
+import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
+import org.yaml.snakeyaml.representer.Representer
 import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.PlaceholdersConfig
 import java.io.File
@@ -15,14 +19,23 @@ import kotlin.io.path.isDirectory
 class ConfigUtils(
     private val dataDir: Path,
 ) {
-    private val yaml = Yaml()
+    private val yamlRepr = Representer(DumperOptions()).apply {
+        propertyUtils.isSkipMissingProperties = true
+    }
+    private val yaml = Yaml(
+        CustomClassLoaderConstructor(object {}.javaClass.classLoader, LoaderOptions()),
+        yamlRepr
+    )
 
     /**
      * Находит в ресурсах файл [resourcePath], распаковывает его в папку
      * плагина, читает его как yaml и парсит в объект типа [type]
      * */
     fun <T> readConfig(resourcePath: String, type: Class<T>): T {
-        return yaml.loadAs(extractAndGetResourceFile(resourcePath).inputStream(), type)
+        return Yaml(CustomClassLoaderConstructor(type.classLoader, LoaderOptions()), yamlRepr).loadAs(
+            extractAndGetResourceFile(resourcePath).inputStream(),
+            type
+        )
     }
 
     // fun writeConfig(resourcePath: String, data: Any) {
@@ -66,21 +79,26 @@ class ConfigUtils(
      * */
     fun loadLocalesFolder(ld: LocaleData): List<String> {
         val msgsPath = "/messages"
-        LocaleData.clear()
+        ld.clear()
 
         Res.extractResourcesFolder(msgsPath, dataDir.toFile())
 
         val locales = readLocaleFiles { lang, data ->
-            LocaleData.load(lang, data)
+            ld.load(lang, data)
         }
 
         if (locales.isEmpty())
             throw FileNotFoundException("No locales found neither in resources nor in plugin folder${msgsPath}!")
 
         val placeholdersConfig = readConfig("${msgsPath}/placeholders.yml", PlaceholdersConfig::class.java)
+        // val pcm: Map<String, Map<String, String>> = yaml.load("${msgsPath}/placeholders.yml")
+        // val placeholdersConfig = PlaceholdersConfig(
+        //     `static-placeholders` = pcm["static-placeholders"] ?: mapOf(),
+        //     `custom-color-tags` = pcm["custom-color-tags"] ?: mapOf()
+        // )
 
-        LocaleData.addGlobalStaticPlaceholders(placeholdersConfig.`static-placeholders`)
-        LocaleData.addCustomColorTags(placeholdersConfig.`custom-color-tags`)
+        ld.addGlobalStaticPlaceholders(placeholdersConfig.`static-placeholders`)
+        ld.addCustomColorTags(placeholdersConfig.`custom-color-tags`)
 
         return locales
     }
@@ -96,3 +114,4 @@ class ConfigUtils(
         LocaleData.load(lang, dataDir.resolve(file).toFile())
     }
 }
+

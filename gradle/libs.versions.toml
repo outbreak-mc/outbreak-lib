@@ -7,7 +7,7 @@ pluginyml-version = "0.6.0"
 adventure-version = "4.19.0"
 apache-commons-text-version = "1.11.0"
 buildconfig-version = "5.5.1"
-commandapi-version = "9.7.0"
+commandapi-version = "10.1.0"
 snakeyaml-version = "2.2"
 
 [libraries]
