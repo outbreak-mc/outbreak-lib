@@ -1,4 +1,4 @@
-package space.outbreak.lib
+package space.outbreak.lib.paper
 //
 // import net.kyori.adventure.text.logger.slf4j.ComponentLogger
 //

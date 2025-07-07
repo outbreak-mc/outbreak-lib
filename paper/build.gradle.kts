@@ -3,10 +3,15 @@ plugins {
     `java-library`
 }
 
+group = "${rootProject.group}.paper"
+
 dependencies {
     compileOnly(rootProject.libs.paper)
-    compileOnly(rootProject.libs.commandapi)
-    api(project(":utils"))
+    compileOnlyApi(rootProject.libs.adventure.api)
+    compileOnlyApi(rootProject.libs.adventure.text.minimessage)
+    compileOnly(rootProject.libs.commandapi.core)
+    compileOnly(rootProject.libs.commandapi.kotlin)
+    implementation(project(":utils"))
 }
 
 tasks.jar {

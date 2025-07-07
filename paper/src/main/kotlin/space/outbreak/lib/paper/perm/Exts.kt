@@ -1,4 +1,4 @@
-package space.outbreak.lib.perm
+package space.outbreak.lib.paper.perm
 
 import dev.jorel.commandapi.ExecutableCommand
 import org.bukkit.command.CommandSender

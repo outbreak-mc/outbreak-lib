@@ -46,7 +46,11 @@ abstract class SealedLocaleBase(
     }
 
     fun comp(lang: String? = null): Component {
-        return process(raw(lang ?: data.defaultLang), lang, replacing)
+        return process(
+            byPath(lang = lang ?: data.defaultLang, path = name) ?: return Component.text(name),
+            lang,
+            replacing
+        )
     }
 
     fun send(audience: Audience, lang: String? = null) {

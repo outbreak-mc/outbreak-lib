@@ -9,6 +9,8 @@ apache-commons-text-version = "1.11.0"
 buildconfig-version = "5.5.1"
 commandapi-version = "10.1.0"
 snakeyaml-version = "2.2"
+exposed-version = "0.61.0"
+hikaricp-version = "6.2.1"
 
 [libraries]
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper-version" }
@@ -18,7 +20,12 @@ adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", 
 adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure-version" }
 adventure-text-serializer-plain = { module = "net.kyori:adventure-text-serializer-plain", version.ref = "adventure-version" }
 apache-commons-text = { module = "org.apache.commons:commons-text", version.ref = "apache-commons-text-version" }
-commandapi = { module = "dev.jorel:commandapi-bukkit-core", version.ref = "commandapi-version" }
+commandapi-core = { module = "dev.jorel:commandapi-bukkit-core", version.ref = "commandapi-version" }
+commandapi-kotlin = { module = "dev.jorel:commandapi-bukkit-kotlin", version.ref = "commandapi-version" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp-version" }
+
+jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed-version" }
+jetbrains-exposed-migration = { module = "org.jetbrains.exposed:exposed-migration", version.ref = "exposed-version" }
 
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml-version" }
 

@@ -8,6 +8,33 @@ object LocaleData {
     internal val data = _LocaleData()
     private val yaml = Yaml()
 
+    fun getRaw(lang: LangKey, key: TranslationKey): String? {
+        val k = if (key.contains(".") || key.contains("-")) {
+            key.uppercase()
+                .replace(".", "__")
+                .replace("-", "_")
+        } else
+            key
+        return data.compiledTree[lang]?.get(k)
+    }
+
+    fun getLanguages(): Set<String> {
+        return data.languages
+    }
+
+    fun getKeys(lang: LangKey, yamlFormat: Boolean): Collection<TranslationKey> {
+        val keys = (data.compiledTree[lang] ?: mapOf()).keys
+        return if (yamlFormat) {
+            keys.map {
+                it.lowercase()
+                    .replace("__", ".")
+                    .replace("_", "-")
+            }
+        } else {
+            keys
+        }
+    }
+
     fun clear() {
         data.clear()
     }
@@ -37,7 +64,7 @@ object LocaleData {
         data.recalculateSerializer()
     }
 
-    var defaultLang: String?
+    var defaultLang: String
         get() = data.defaultLang
         set(value) {
             data.defaultLang = value

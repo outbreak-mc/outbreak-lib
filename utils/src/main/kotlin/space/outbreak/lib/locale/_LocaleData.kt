@@ -7,11 +7,11 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
 
 @Suppress("MemberVisibilityCanBePrivate", "ClassName")
-internal class _LocaleData {
-    internal val compiledTree: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
-    internal val placeholdersLangSpecific: LangSpecificStaticPlaceholders = mutableMapOf()
-    internal val placeholdersGlobal: StaticPlaceholders = mutableMapOf()
-    internal val customColorTags: MutableMap<String, String> = mutableMapOf()
+class _LocaleData {
+    val compiledTree: MutableMap<LangKey, MutableMap<TranslationKey, String>> = mutableMapOf()
+    val placeholdersLangSpecific: LangSpecificStaticPlaceholders = mutableMapOf()
+    val placeholdersGlobal: StaticPlaceholders = mutableMapOf()
+    val customColorTags: MutableMap<String, String> = mutableMapOf()
 
     internal lateinit var serializer: MiniMessage
 
@@ -75,10 +75,16 @@ internal class _LocaleData {
     }
 
     /**
-     * Загружает языковой файл языка [lang] в словарь.
+     * Добавляет данные из [config] в языковой словарь
+     *
+     * @param lang название языка вида `ru_RU` (формат, который возвращается `Locale.toString()`).
+     *
+     * @param config карта вида {ключ: перевод}. Ключи ожидаются в формате путей из yaml:
+     *  <br>
+     *  `example.path.my-key`
      * */
     fun load(lang: String, config: Map<String, Any?>) {
-        compiledTree[lang] = compileMap(config)
+        compiledTree.getOrPut(lang) { mutableMapOf() }.putAll(compileMap(config))
     }
 
     init {
@@ -86,28 +92,34 @@ internal class _LocaleData {
     }
 
     /** Возвращает [Set] имеющихся языков */
-    val languages: Set<String?>
+    val languages: Set<String>
         get() = compiledTree.keys
 
     /**
      * Возвращает язык по умолчанию. Если язык всего один, всегда возвращает его.
+     * Не может быть пустой строкой. В случае присвоения пустой строки, становится `"default"`.
+     *
      * @throws IllegalArgumentException при попытке установки незагруженного языка
      * */
-    var defaultLang: String? = ""
+    var defaultLang: String = "default"
         get() {
-            if (field != "")
+            if (field != "default" && field != "")
                 return field
             else
-                field = if (languages.isNotEmpty()) languages.first() else null
+                field = if (languages.isNotEmpty()) languages.first() else "default"
             return field
         }
         set(value) {
-            if (value != "" && !languages.contains(value)) {
+            val v = if (value == "") {
+                "default"
+            } else value
+
+            if (v != "default" && !languages.contains(v)) {
                 if (languages.isEmpty())
                     throw IllegalStateException("No languages loaded!")
-                throw IllegalArgumentException("Language \"$value\" is not loaded!")
+                throw IllegalArgumentException("Language \"$v\" is not loaded!")
             }
-            field = value
+            field = v
         }
 
     /** Удаляет все загруженные словари, плейсхолдеры и прочие данные */

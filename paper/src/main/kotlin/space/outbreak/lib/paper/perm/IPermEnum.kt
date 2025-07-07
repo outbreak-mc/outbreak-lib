@@ -1,4 +1,4 @@
-package space.outbreak.lib.perm
+package space.outbreak.lib.paper.perm
 
 import org.bukkit.permissions.Permissible
 
