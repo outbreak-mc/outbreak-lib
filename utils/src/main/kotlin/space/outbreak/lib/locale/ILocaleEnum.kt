@@ -10,10 +10,6 @@ import org.apache.commons.text.StringSubstitutor
 interface ILocaleEnum {
     val name: String
 
-    fun processAndDeitalize(text: String, lang: String? = null, vararg placeholders: Pair<String, Any>): Component {
-        return deitalize(process(text, lang ?: data.defaultLang, *placeholders))
-    }
-
     fun comp(lang: String? = null, vararg replacing: Pair<String, Any>): Component {
         return process(raw(lang), lang, *replacing)
     }
@@ -121,6 +117,11 @@ interface ILocaleEnum {
         @JvmStatic
         fun deitalize(comp: Component): Component {
             return Component.empty().decoration(TextDecoration.ITALIC, false).children(mutableListOf(comp))
+        }
+
+        @JvmStatic
+        fun processAndDeitalize(text: String, lang: String? = null, vararg placeholders: Pair<String, Any>): Component {
+            return deitalize(process(text, lang ?: data.defaultLang, *placeholders))
         }
 
         @JvmStatic
