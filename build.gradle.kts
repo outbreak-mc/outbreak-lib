@@ -4,7 +4,7 @@ plugins {
 }
 
 tasks.wrapper {
-    gradleVersion = "8.13"
+    gradleVersion = "8.14.3"
 }
 
 group = "space.outbreak.lib"
@@ -25,6 +25,22 @@ allprojects {
         compileOnly(kotlin("stdlib"))
         compileOnly(kotlin("reflect"))
         compileOnly(rootProject.libs.snakeyaml)
+
+        testImplementation(rootProject.libs.kotlin.test)
+        testImplementation(rootProject.libs.snakeyaml)
+        testImplementation(rootProject.libs.junit)
+    }
+
+    tasks.test {
+        useJUnitPlatform()
+        outputs.upToDateWhen { false }
+        testLogging {
+            showStandardStreams = true
+        }
+    }
+
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
     }
 }
 

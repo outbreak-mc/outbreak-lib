@@ -1,17 +1,14 @@
-package space.outbreak.lib.sealedlocale
+package space.outbreak.lib.locale
 
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
-import space.outbreak.lib.locale.ILocaleEnum.Companion.byPath
-import space.outbreak.lib.locale.ILocaleEnum.Companion.data
-import space.outbreak.lib.locale.ILocaleEnum.Companion.process
-import space.outbreak.lib.locale.ILocaleEnum.Companion.stringReplaceAll
 import kotlin.reflect.KProperty
 
 abstract class SealedLocaleBase(
+    private val data: LocaleData,
     private vararg val offsetNodes: String,
 ) {
-    constructor(offsetNodes: Collection<String>) : this(*offsetNodes.toTypedArray())
+    constructor(data: LocaleData, offsetNodes: Collection<String>) : this(data, *offsetNodes.toTypedArray())
 
     private val name: String by lazy {
         if (offsetNodes.isEmpty())
@@ -35,19 +32,21 @@ abstract class SealedLocaleBase(
     }
 
     fun raw(lang: String?): String {
-        return stringReplaceAll(byPath(lang = lang ?: data.defaultLang, path = name) ?: return name, replacingMap)
+        return data.formatter.stringReplaceAll(
+            data.formatter.byPath(lang = lang ?: data.defaultLang, path = name) ?: return name, replacingMap
+        )
     }
 
     fun rawOrNull(lang: String?): String? {
-        return stringReplaceAll(
-            byPath(lang = lang ?: data.defaultLang, path = name) ?: return null,
+        return data.formatter.stringReplaceAll(
+            data.formatter.byPath(lang = lang ?: data.defaultLang, path = name) ?: return null,
             replacingMap
         )
     }
 
     fun comp(lang: String? = null): Component {
-        return process(
-            byPath(lang = lang ?: data.defaultLang, path = name) ?: return Component.text(name),
+        return data.formatter.process(
+            data.formatter.byPath(lang = lang ?: data.defaultLang, path = name) ?: return Component.text(name),
             lang,
             replacing
         )

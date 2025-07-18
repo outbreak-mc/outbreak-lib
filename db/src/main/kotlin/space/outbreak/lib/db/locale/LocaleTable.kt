@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 internal class LocaleTable(name: String = "locale") : IntIdTable(name) {
     /** Название плагина, которому принадлежит перевод */
-    val namespace = varchar("namespace", 128).index()
+    val namespace = varchar("namespace", 128).nullable().index()
 
     /** Название языка */
     val lang = varchar("lang", 5).index()

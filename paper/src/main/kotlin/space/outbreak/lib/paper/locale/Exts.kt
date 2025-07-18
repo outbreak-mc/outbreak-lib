@@ -4,7 +4,7 @@ import dev.jorel.commandapi.CommandAPIBukkit
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 import org.bukkit.inventory.meta.ItemMeta
 import space.outbreak.lib.locale.ILocaleEnum
-import space.outbreak.lib.sealedlocale.SealedLocaleBase
+import space.outbreak.lib.locale.SealedLocaleBase
 
 fun ILocaleEnum.cmdFail(vararg placeholders: Pair<String, Any>): Nothing {
     throw CommandAPIBukkit.failWithAdventureComponent(this.comp(*placeholders))

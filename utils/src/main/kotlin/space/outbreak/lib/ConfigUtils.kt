@@ -6,15 +6,13 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
 import org.yaml.snakeyaml.representer.Representer
 import space.outbreak.lib.locale.LocaleData
+import space.outbreak.lib.locale.LocaleDataManager
 import space.outbreak.lib.locale.PlaceholdersConfig
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.absolute
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
+import kotlin.io.path.*
 
 class ConfigUtils(
     private val dataDir: Path,
@@ -91,13 +89,8 @@ class ConfigUtils(
             throw FileNotFoundException("No locales found neither in resources nor in plugin folder${msgsPath}!")
 
         val placeholdersConfig = readConfig("${msgsPath}/placeholders.yml", PlaceholdersConfig::class.java)
-        // val pcm: Map<String, Map<String, String>> = yaml.load("${msgsPath}/placeholders.yml")
-        // val placeholdersConfig = PlaceholdersConfig(
-        //     `static-placeholders` = pcm["static-placeholders"] ?: mapOf(),
-        //     `custom-color-tags` = pcm["custom-color-tags"] ?: mapOf()
-        // )
 
-        ld.addGlobalStaticPlaceholders(placeholdersConfig.`static-placeholders`)
+        ld.addPlaceholders(null, placeholdersConfig.`static-placeholders`)
         ld.addCustomColorTags(placeholdersConfig.`custom-color-tags`)
 
         return locales
@@ -105,13 +98,13 @@ class ConfigUtils(
 
     /**
      * Распаковывает из ресурсов файл [file] в папку плагина, если его не существует,
-     * и читает данные из него в [LocaleData] как язык [lang]. Существующие данные этого
+     * и читает данные из него в [LocaleDataManager] как язык [lang]. Существующие данные этого
      * языка предварительно очищаются.
      * */
-    fun loadSingleLocaleFile(file: String = "locale.yml", lang: String) {
-        LocaleData.removeLang(lang)
+    fun loadSingleLocaleFile(ld: LocaleData, file: String = "locale.yml", lang: String) {
+        ld.removeLocaleLang(lang)
         Res.saveResource(file, dataDir.toFile(), false)
-        LocaleData.load(lang, dataDir.resolve(file).toFile())
+        ld.load(lang, yaml.load(dataDir.resolve(file).inputStream()))
     }
 }
 

@@ -3,15 +3,11 @@ plugins {
     `java-library`
 }
 
-group = "${rootProject.group}.paper"
+group = "${rootProject.group}.paper.shaded"
 
 dependencies {
     compileOnly(rootProject.libs.paper)
-    compileOnlyApi(rootProject.libs.adventure.api)
-    compileOnlyApi(rootProject.libs.adventure.text.minimessage)
-    compileOnly(rootProject.libs.commandapi.core)
-    compileOnly(rootProject.libs.commandapi.kotlin)
-    implementation(project(":utils"))
+    // compileOnly(project(":utils"))
 }
 
 tasks.jar {
@@ -25,7 +21,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = rootProject.group.toString()
-            artifactId = "paper"
+            artifactId = "paper-shaded"
             version = rootProject.version.toString()
             from(components["java"])
         }

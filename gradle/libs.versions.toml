@@ -1,9 +1,9 @@
 [versions]
 kotlin-version = "2.0.21"
-paper-version = "1.20.1-R0.1-SNAPSHOT"
-paperweight-version = "2.0.0-beta.14"
+paper-version = "1.21.6-R0.1-SNAPSHOT"
+paperweight-version = "2.0.0-beta.17"
 shadow-version = "9.0.0-beta4"
-pluginyml-version = "0.6.0"
+pluginyml-version = "0.7.1"
 adventure-version = "4.19.0"
 apache-commons-text-version = "1.11.0"
 buildconfig-version = "5.5.1"
@@ -11,6 +11,8 @@ commandapi-version = "10.1.0"
 snakeyaml-version = "2.2"
 exposed-version = "0.61.0"
 hikaricp-version = "6.2.1"
+junit-version = "5.11.1"
+h2-version = "2.3.232"
 
 [libraries]
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper-version" }
@@ -19,6 +21,7 @@ adventure-text-logger = { module = "net.kyori:adventure-text-logger-slf4j", vers
 adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure-version" }
 adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure-version" }
 adventure-text-serializer-plain = { module = "net.kyori:adventure-text-serializer-plain", version.ref = "adventure-version" }
+adventure-text-serializer-ansi = { module = "net.kyori:adventure-text-serializer-ansi", version.ref = "adventure-version" }
 apache-commons-text = { module = "org.apache.commons:commons-text", version.ref = "apache-commons-text-version" }
 commandapi-core = { module = "dev.jorel:commandapi-bukkit-core", version.ref = "commandapi-version" }
 commandapi-kotlin = { module = "dev.jorel:commandapi-bukkit-kotlin", version.ref = "commandapi-version" }
@@ -26,12 +29,18 @@ hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp-version" }
 
 jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed-version" }
 jetbrains-exposed-migration = { module = "org.jetbrains.exposed:exposed-migration", version.ref = "exposed-version" }
+jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed-version" }
+jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed-version" }
 
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml-version" }
+
+junit = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-version" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin-version" }
+h2 = { module = "com.h2database:h2", version.ref = "h2-version" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow-version" }
-pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml-version" }
 paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight-version" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig-version" }
+pluginyml-paper = { id = "de.eldoria.plugin-yml.paper", version.ref = "pluginyml-version" }
