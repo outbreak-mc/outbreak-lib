@@ -81,7 +81,7 @@ class OutbreakLibPlugin : JavaPlugin() {
         }.inWholeMilliseconds
         if (lastedTime < loadTime) {
             val msg = (if (lastedTime == 0L)
-                "<#ffb3e2>DB completely loaded in background and did not took any start time!</#ffb3e2> <yellow>✨"
+                "<#ffb3e2>DB completely loaded in background and did not take any start time!</#ffb3e2> <yellow>✨"
             else
                 "<#ffb3e2>Yay! Only waited for db synchronously for <yellow>$lastedTime</yellow> ms!")
 
