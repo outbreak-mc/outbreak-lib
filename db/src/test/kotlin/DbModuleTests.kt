@@ -9,6 +9,7 @@ import space.outbreak.lib.db.DEFAULT_TABLE_NAMES
 import space.outbreak.lib.db.initDatabaseTables
 import space.outbreak.lib.db.loadAllFromDB
 import space.outbreak.lib.locale.LocaleDataManager
+import space.outbreak.lib.locale.pair.means
 import kotlin.time.measureTime
 
 class DbModuleTests {
@@ -102,8 +103,8 @@ class DbModuleTests {
         printansi(L.PATH__WITH__THREE__DOTS_AND_HYPHENS.comp())
         printansi(
             L.MSG__WITH_PLACEHOLDERS.comp(
-                "string" to "<aqua>Строка</aqua> (<green>ОК</green>)",
-                "component" to miniMessage().deserialize("<dark_purple>Компонент</dark_purple> (<green>ОК</green>)")
+                "string" means "<aqua>Строка</aqua> (<green>ОК</green>)",
+                "component" means miniMessage().deserialize("<dark_purple>Компонент</dark_purple> (<green>ОК</green>)")
             )
         )
         printansi(

@@ -2,6 +2,8 @@ package space.outbreak.lib.locale
 
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
+import space.outbreak.lib.locale.pair.LocalePairBase
+import space.outbreak.lib.locale.pair.means
 import kotlin.reflect.KProperty
 
 abstract class SealedLocaleBase(
@@ -17,30 +19,30 @@ abstract class SealedLocaleBase(
             offsetNodes.joinToString(separator = "__") { it.uppercase() } + "__" + this::class.simpleName!!
     }
 
-    private val replacing: List<Pair<String, Any>> by lazy {
+    private val replacing: Array<LocalePairBase> by lazy {
         this::class.members
             .filterIsInstance<KProperty<*>>()
             .filter { it.parameters.size == 1 }
             .mapNotNull { field ->
                 val value = field.getter.call(this) ?: return@mapNotNull null
-                field.name to value
-            }
+                field.name means value
+            }.toTypedArray()
     }
-
-    private val replacingMap by lazy {
-        replacing.associate { it.first to it.second }
-    }
+    //
+    // private val replacingMap by lazy {
+    //     replacing.associate { it.first to it.second }
+    // }
 
     fun raw(lang: String?): String {
         return data.formatter.stringReplaceAll(
-            data.formatter.byPath(lang = lang ?: data.defaultLang, path = name) ?: return name, replacingMap
+            data.formatter.byPath(lang = lang ?: data.defaultLang, path = name) ?: return name, *replacing
         )
     }
 
     fun rawOrNull(lang: String?): String? {
         return data.formatter.stringReplaceAll(
             data.formatter.byPath(lang = lang ?: data.defaultLang, path = name) ?: return null,
-            replacingMap
+            *replacing
         )
     }
 
@@ -48,7 +50,7 @@ abstract class SealedLocaleBase(
         return data.formatter.process(
             data.formatter.byPath(lang = lang ?: data.defaultLang, path = name) ?: return Component.text(name),
             lang,
-            replacing
+            *replacing
         )
     }
 
