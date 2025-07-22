@@ -7,31 +7,31 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
 
 @Suppress("MemberVisibilityCanBePrivate")
-class LocaleData internal constructor() {
-    internal val compiledTree: MutableMap<LangKey, MutableMap<TranslationKey, String>> = mutableMapOf()
-    internal val placeholdersLangSpecific: LangSpecificStaticPlaceholders = mutableMapOf()
-    internal val placeholdersGlobal: StaticPlaceholders = mutableMapOf()
-    internal val customColorTags: MutableMap<String, String> = mutableMapOf()
-
+data class LocaleData internal constructor(
+    internal val compiledTree: MutableMap<LangKey, MutableMap<TranslationKey, String>> = mutableMapOf(),
+    internal val placeholdersLangSpecific: LangSpecificStaticPlaceholders = mutableMapOf(),
+    internal val placeholdersGlobal: StaticPlaceholders = mutableMapOf(),
+    internal val customColorTags: MutableMap<String, String> = mutableMapOf(),
+) {
     val formatter = Formatter(this)
 
     internal lateinit var serializer: MiniMessage
 
-    fun removeLangCompletely(lang: String) {
+    internal fun removeLangCompletely(lang: String) {
         compiledTree.remove(lang)
         placeholdersLangSpecific.remove(lang)
     }
 
-    fun removeLocaleLang(lang: String) {
+    internal fun removeLocaleLang(lang: String) {
         compiledTree.remove(lang)
     }
 
-    fun addPlaceholders(lang: String?, placeholders: Map<String, String>) {
+    internal fun addPlaceholders(lang: String?, placeholders: Map<String, String>) {
         (if (lang == null) placeholdersGlobal else placeholdersLangSpecific.getOrPut(lang) { mutableMapOf() })
             .putAll(placeholders)
     }
 
-    fun addCustomColorTags(tags: Map<String, String>) {
+    internal fun addCustomColorTags(tags: Map<String, String>) {
         customColorTags.putAll(tags)
         recalculateSerializer()
     }
@@ -40,7 +40,7 @@ class LocaleData internal constructor() {
         placeholdersLangSpecific.remove(lang)
     }
 
-    fun String.toEnumStyleKey(): String {
+    internal fun String.toEnumStyleKey(): String {
         return uppercase().replace("-", "_").replace(".", "__")
     }
 
@@ -136,7 +136,7 @@ class LocaleData internal constructor() {
      *  <br>
      *  `example.path.my-key`
      * */
-    fun load(lang: String, config: Map<String, Any?>) {
+    internal fun load(lang: String, config: Map<String, Any?>) {
         compiledTree.getOrPut(lang) { mutableMapOf() }.putAll(compileMap(config))
     }
 

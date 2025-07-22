@@ -102,58 +102,67 @@ fun LocaleDataManager.loadAllFromDB(
     namespaces: Collection<String>,
     tables: TableNamesSystem = DEFAULT_TABLE_NAMES,
 ) {
+    fun normalizeNamespace(ns: String?): String {
+        if (ns.isNullOrBlank())
+            return "*"
+        return ns
+    }
+
     transaction(db) {
         ////////////////////////////////////////////////////////
         //////////////////////// Locale ////////////////////////
         ////////////////////////////////////////////////////////
-        val lTable = tables.tables.locale
-        val lQuery = lTable.selectAll()
-        if (!namespaces.contains("*"))
-            lQuery.andWhere { (lTable.namespace inList namespaces) or (lTable.namespace.isNull()) }
+        tables.tables.locale.also { t ->
+            val lQuery = t.selectAll()
+            if (!namespaces.contains("*"))
+                lQuery.andWhere {
+                    (t.namespace inList namespaces) or (t.namespace eq "*") or (t.namespace.isNull() or (t.namespace eq ""))
+                }
 
-        val sortedLocaleData = mutableMapOf<String, MutableMap<String, MutableMap<String, String>>>()
+            val sortedLocaleData = mutableMapOf<String, MutableMap<String, MutableMap<String, String>>>()
 
-        for (row in lQuery) {
-            val ns = row[lTable.namespace]
-            val lang = row[lTable.lang]
-            val key = row[lTable.key]
-            val value = row[lTable.value]
-            sortedLocaleData.getOrPut(ns ?: "*") { mutableMapOf() }.getOrPut(lang) { mutableMapOf() }[key] = value
+            for (row in lQuery) {
+                val ns = normalizeNamespace(row[t.namespace])
+                val lang = row[t.lang]
+                val key = row[t.key]
+                val value = row[t.value]
+                sortedLocaleData.getOrPut(ns ?: "*") { mutableMapOf() }.getOrPut(lang) { mutableMapOf() }[key] = value
+            }
+
+            for ((ns, data) in sortedLocaleData)
+                for ((lang, keyValue) in data)
+                    this@loadAllFromDB.load(ns, lang, keyValue)
         }
-
-        for ((ns, data) in sortedLocaleData)
-            for ((lang, keyValue) in data)
-                this@loadAllFromDB.data(ns).load(lang, keyValue)
 
         ////////////////////////////////////////////////////////
         /////////////////// Custom color tags //////////////////
         ////////////////////////////////////////////////////////
-        tables.tables.customColorTag.let { t ->
+        tables.tables.customColorTag.also { t ->
             val q = t.selectAll()
             if (!namespaces.contains("*"))
-                q.andWhere { (t.namespace inList namespaces) or (t.namespace.isNull()) }
+                q.andWhere { (t.namespace inList namespaces) or (t.namespace eq "*") or (t.namespace.isNull() or (t.namespace eq "")) }
             val sortedData = mutableMapOf<String, MutableMap<String, String>>()
             for (row in q) {
-                sortedData.getOrPut(row[t.namespace] ?: "*") { mutableMapOf() }[row[t.tag]] = row[t.hex]
+                sortedData.getOrPut(normalizeNamespace(row[t.namespace])) { mutableMapOf() }[row[t.tag]] = row[t.hex]
             }
             for ((ns, data) in sortedData)
-                this@loadAllFromDB.data(ns).addCustomColorTags(data)
+                this@loadAllFromDB.addCustomColorTags(ns, data)
         }
 
 
         ////////////////////////////////////////////////////////
         ////////////////// Static placeholders /////////////////
         ////////////////////////////////////////////////////////
-        tables.tables.placeholder.let { t ->
+        tables.tables.placeholder.also { t ->
             val q = t.selectAll()
             if (!namespaces.contains("*"))
-                q.andWhere { (t.namespace inList namespaces) or (t.namespace.isNull()) }
+                q.andWhere { (t.namespace inList namespaces) or (t.namespace eq "*") or (t.namespace.isNull() or (t.namespace eq "")) }
 
             val sortedDataLS = mutableMapOf<String, MutableMap<String, MutableMap<String, String>>>()
             val sortedDataGlobal = mutableMapOf<String, MutableMap<String, String>>()
 
             for (row in q) {
-                val ns = row[t.namespace] ?: "*"
+                val ns = normalizeNamespace(row[t.namespace])
                 val lang = row[t.lang]
                 val placeholder = row[t.placeholder]
                 val value = row[t.value]
@@ -168,169 +177,10 @@ fun LocaleDataManager.loadAllFromDB(
 
             for ((ns, data) in sortedDataLS) {
                 for ((lang, placeholders) in data)
-                    this@loadAllFromDB.data(ns).addPlaceholders(lang, placeholders)
+                    this@loadAllFromDB.addPlaceholders(ns, lang, placeholders)
             }
             for ((ns, placeholders) in sortedDataGlobal)
-                this@loadAllFromDB.data(ns).addPlaceholders(null, placeholders)
+                this@loadAllFromDB.addPlaceholders(ns, null, placeholders)
         }
     }
 }
-
-// /**
-//  * Загружает переводы из базы данных
-//  *
-//  * @param db подключение к бд
-//  * @param namespace пространство имён - колонка в таблице, определяющая
-//  *  принадлежность к определённому плагину. Пространство `null` считается
-//  *  глобальным и загружается всегда.
-//  * @param tables свои названия таблиц, если используется.
-//  *  Использовать свою систему названий таблиц крайне не рекомендуется.
-//  * */
-// fun LocaleDataManager.loadFromDB(
-//     db: Database,
-//     namespace: String?,
-//     tables: TableNamesSystem = DEFAULT_TABLE_NAMES,
-// ) = loadFromDB(db, if (namespace != null) listOf(namespace) else emptyList(), tables)
-
-// /**
-//  * Загружает переводы из базы данных
-//  *
-//  * @param db подключение к бд
-//  * @param namespaces список пространств имён для загрузки. Пространство
-//  * имён - это колонка в таблице, определяющая принадлежность к определённому
-//  * плагину. Пространство `null` считается глобальным и загружается всегда.
-//  * @param tables свои названия таблиц, если используется.
-//  *  Использовать свою систему названий таблиц крайне не рекомендуется.
-//  * */
-// fun LocaleDataManager.loadFromDB(
-//     db: Database,
-//     namespaces: Iterable<String>,
-//     tables: TableNamesSystem = DEFAULT_TABLE_NAMES,
-// ) {
-//     transaction(db) {
-//         val table = tables.tables.locale
-//         val languages = table.select(table.lang)
-//         if (!namespaces.contains("*"))
-//             languages.andWhere { table.namespace.isNull() or (table.namespace inList namespaces) }
-//
-//         for (lang in languages.groupBy(table.lang).map { it[table.lang] }) {
-//             val data = table.selectAll()
-//             if (!namespaces.contains("*"))
-//                 data.andWhere {
-//                     (table.namespace inList namespaces) and (table.lang eq lang)
-//                 }
-//
-//             val out = data.associate {
-//                 val key = it[table.namespace]
-//                 val value = it[table.value]
-//
-//                 key to value
-//             }
-//
-//             this@loadFromDB.load(it[table.], lang, )
-//         }
-//     }
-// }
-//
-// /**
-//  * Загружает кастомные цветовые теги из базы данных
-//  *
-//  * @param db подключение к бд
-//  * @param namespaces список пространств имён для загрузки. Пространство
-//  * имён - это колонка в таблице, определяющая принадлежность к определённому
-//  * плагину. Пространство `null` считается глобальным и загружается всегда.
-//  * @param tables свои названия таблиц, если используется.
-//  *  Использовать свою систему названий таблиц крайне не рекомендуется.
-//  * */
-// fun LocaleDataManager.loadCustomColorTagsFromDB(
-//     db: Database,
-//     namespaces: Iterable<String>,
-//     tables: TableNamesSystem = DEFAULT_TABLE_NAMES,
-// ) {
-//     transaction(db) {
-//         val table = tables.tables.customColorTag
-//         val data = table.selectAll()
-//         if (!namespaces.contains("*"))
-//             data.andWhere {
-//                 (table.namespace.isNull()) or (table.namespace inList namespaces)
-//             }
-//
-//         this@loadCustomColorTagsFromDB.addCustomColorTags(data.associate {
-//             it[table.tag] to it[table.hex]
-//         })
-//     }
-// }
-//
-// /**
-//  * Загружает кастомные цветовые теги из базы данных
-//  *
-//  * @param db подключение к бд
-//  * @param namespace пространство имён - колонка в таблице, определяющая
-//  *  принадлежность к определённому плагину. Пространство `null` считается
-//  *  глобальным и загружается всегда.
-//  * @param tables свои названия таблиц, если используется.
-//  *  Использовать свою систему названий таблиц крайне не рекомендуется.
-//  * */
-// fun LocaleDataManager.loadCustomColorTagsFromDB(
-//     db: Database,
-//     namespace: String?,
-//     tables: TableNamesSystem = DEFAULT_TABLE_NAMES,
-// ) = loadCustomColorTagsFromDB(db, if (namespace != null) listOf(namespace) else emptyList(), tables)
-//
-// /**
-//  * Загружает статические плейсхолдеры из базы данных
-//  *
-//  * @param db подключение к бд
-//  * @param namespaces список пространств имён для загрузки. Пространство
-//  * имён - это колонка в таблице, определяющая принадлежность к определённому
-//  * плагину. Пространство `null` считается глобальным и загружается всегда.
-//  * @param tables свои названия таблиц, если используется.
-//  *  Использовать свою систему названий таблиц крайне не рекомендуется.
-//  * */
-// fun LocaleDataManager.loadPlaceholdersFromDB(
-//     db: Database,
-//     namespaces: Iterable<String>,
-//     tables: TableNamesSystem = DEFAULT_TABLE_NAMES,
-// ) {
-//     transaction(db) {
-//         val t = tables.tables.placeholder
-//         val data = t.selectAll()
-//         if (!namespaces.contains("*"))
-//             data.andWhere { t.namespace.isNull() or (t.namespace inList namespaces) }
-//
-//         val langSpecific = mutableMapOf<String, MutableMap<String, String>>()
-//         val global = mutableMapOf<String, String>()
-//
-//         for (row in data) {
-//             val lang = row[t.lang]
-//             val placeholder = row[t.placeholder]
-//             val value = row[t.value]
-//
-//             if (lang == null) {
-//                 global[placeholder] = value
-//             } else {
-//                 langSpecific.getOrPut(lang) { mutableMapOf() }[placeholder] = value
-//             }
-//         }
-//
-//         this@loadPlaceholdersFromDB.addGlobalStaticPlaceholders(global)
-//         for ((lang, placeholders) in langSpecific)
-//             this@loadPlaceholdersFromDB.addLangSpecificStaticPlaceholders(lang, placeholders)
-//     }
-// }
-//
-// /**
-//  * Загружает статические плейсхолдеры из базы данных
-//  *
-//  * @param db подключение к бд
-//  * @param namespace пространство имён - колонка в таблице, определяющая
-//  *  принадлежность к определённому плагину. Пространство `null` считается
-//  *  глобальным и загружается всегда.
-//  * @param tables свои названия таблиц, если используется.
-//  *  Использовать свою систему названий таблиц крайне не рекомендуется.
-//  * */
-// fun LocaleDataManager.loadPlaceholdersFromDB(
-//     db: Database,
-//     namespace: String?,
-//     tables: TableNamesSystem = DEFAULT_TABLE_NAMES,
-// ) = loadPlaceholdersFromDB(db, if (namespace != null) listOf(namespace) else emptyList(), tables)

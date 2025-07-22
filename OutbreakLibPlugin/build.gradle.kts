@@ -65,9 +65,8 @@ tasks.shadowJar {
     // relocate("com.fasterxml.jackson", "${rootProject.group}.shaded.com.fasterxml.jackson")
     exclude("/kotlin/")
     exclude("/kotlinx/")
-    mergeServiceFiles()
 
-    // PapiExpansion java.lang.NullPointerException: javaClass.getPackage().implementationVersion must not be null
+    mergeServiceFiles()
     manifest {
         attributes("Implementation-Version" to rootProject.version)
     }
