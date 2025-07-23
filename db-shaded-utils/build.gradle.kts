@@ -10,7 +10,6 @@ dependencies {
     compileOnly(rootProject.libs.jetbrains.exposed.migration)
     compileOnly(rootProject.libs.hikaricp)
     compileOnly(project(":utils"))
-    implementation(project(":db-shaded-utils"))
 
     testImplementation(project(":utils"))
     testImplementation(rootProject.libs.h2)
@@ -27,8 +26,7 @@ dependencies {
 }
 
 tasks.jar {
-    from(project(":db").sourceSets.main.get().output)
-
+    from(project(":db-shaded-utils").sourceSets.main.get().output)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
@@ -37,7 +35,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = rootProject.group.toString()
-            artifactId = "db"
+            artifactId = "db-shaded-utils"
             version = rootProject.version.toString()
             from(components["java"])
         }

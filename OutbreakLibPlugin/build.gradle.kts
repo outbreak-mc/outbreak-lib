@@ -40,15 +40,16 @@ dependencies {
     paperweight.paperDevBundle(rootProject.libs.versions.paper.version)
 
     implementation(project(":db"))
+    implementation(project(":db-shaded-utils"))
     implementation(project(":utils"))
     implementation(project(":paper"))
     implementation(project(":paper-shaded"))
 
-    paperLibrary(rootProject.libs.jetbrains.exposed.core)
-    paperLibrary(rootProject.libs.jetbrains.exposed.migration)
-    paperLibrary(rootProject.libs.jetbrains.exposed.dao)
-    paperLibrary(rootProject.libs.jetbrains.exposed.jdbc)
-    paperLibrary(rootProject.libs.hikaricp)
+    implementation(rootProject.libs.jetbrains.exposed.core)
+    implementation(rootProject.libs.jetbrains.exposed.migration)
+    implementation(rootProject.libs.jetbrains.exposed.dao)
+    implementation(rootProject.libs.jetbrains.exposed.jdbc)
+    implementation(rootProject.libs.hikaricp)
 
     compileOnly(rootProject.libs.commandapi.core)
     compileOnly(rootProject.libs.commandapi.kotlin)
@@ -63,6 +64,8 @@ kotlin {
 
 tasks.shadowJar {
     // relocate("com.fasterxml.jackson", "${rootProject.group}.shaded.com.fasterxml.jackson")
+    relocate("org.jetbrains.exposed", "${rootProject.group}.shaded.exposed")
+    relocate("com.zaxxer", "${rootProject.group}.shaded.hikaricp")
     exclude("/kotlin/")
     exclude("/kotlinx/")
 

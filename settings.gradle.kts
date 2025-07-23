@@ -12,5 +12,6 @@ rootProject.name = "OutbreakLib"
 include("utils")
 include("paper")
 include("db")
+include("db-shaded-utils")
 include("OutbreakLibPlugin")
 include("paper-shaded")

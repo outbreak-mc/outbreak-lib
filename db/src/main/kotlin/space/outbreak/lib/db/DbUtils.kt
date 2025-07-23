@@ -1,41 +1,16 @@
 package space.outbreak.lib.db
 
 import MigrationUtils
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import space.outbreak.lib.locale.LocaleDataManager
-import java.io.File
-import java.util.*
 
 val DEFAULT_TABLE_NAMES = TableNamesSystem()
 const val CURRENT_LOCALE_DB_SCHEMA_VERSION = 1
 
 internal object MetaKeys {
     const val VERSION = "version"
-}
-
-/** Подключается к базе данных на основе параметров из `.properties`-файла. */
-fun connectToDB(configFile: File): Database {
-    val props = Properties()
-    props.load(configFile.inputStream())
-    return Database.connect(HikariDataSource(HikariConfig(props)))
-}
-
-/** Метод для простого и удобного подключения к SQLite.
- * По умолчанию включает `foreign_keys`. */
-fun connectToSqlite(file: File, extraConfig: ((HikariConfig) -> Unit)? = null): Database {
-    val conf = HikariConfig().apply {
-        jdbcUrl = "jdbc:sqlite:${file}?foreign_keys=on"
-        driverClassName = "org.sqlite.JDBC"
-        maximumPoolSize = 5
-        isAutoCommit = true
-        extraConfig?.invoke(this)
-    }
-
-    return Database.connect(HikariDataSource(conf))
 }
 
 /**
