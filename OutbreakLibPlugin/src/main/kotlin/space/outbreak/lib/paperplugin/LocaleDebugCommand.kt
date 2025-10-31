@@ -5,28 +5,28 @@ import dev.jorel.commandapi.arguments.ArgumentSuggestions
 import dev.jorel.commandapi.arguments.StringArgument
 import dev.jorel.commandapi.kotlindsl.*
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
-import space.outbreak.lib.locale.KeyFormat
-import space.outbreak.lib.locale.LocaleDataManager
+import space.outbreak.lib.api.locale.GlobalLocaleDataManager
+import space.outbreak.lib.utils.locale.KeyStyle
 
 class LocaleDebugCommand(
     private val plugin: OutbreakLibPlugin,
 ) {
     private val namespaceArgument = StringArgument("namespace")
         .replaceSuggestions(ArgumentSuggestions.stringCollection { info ->
-            LocaleDataManager.namespaces
+            GlobalLocaleDataManager.namespaces
         })
 
     private val langArg = StringArgument("lang")
         .replaceSuggestions(ArgumentSuggestions.stringCollection { info ->
             val ns = info.previousArgs["namespace"] as String
-            LocaleDataManager.data(ns).languages
+            GlobalLocaleDataManager.data(ns).languages
         })
 
     private val keyArg = StringArgument("key")
         .replaceSuggestions(ArgumentSuggestions.stringCollection { info ->
             val lang = info.previousArgs["lang"] as String
             val ns = info.previousArgs["namespace"] as String
-            LocaleDataManager.data(ns).getKeys(lang, KeyFormat.YAML_PATH_STYLE)
+            GlobalLocaleDataManager.data(ns).getKeys(lang, KeyStyle.YAML_PATH)
         })
 
     fun register() {
@@ -49,10 +49,10 @@ class LocaleDebugCommand(
                             argument(keyArg) {
                                 anyExecutor { sender, args ->
                                     val namespace: String by args
-                                    val lang: String by args
+                                    val lang: Locale by args
                                     val key: String by args
 
-                                    val raw = LocaleDataManager.data(namespace).getRaw(lang = lang, key = key)
+                                    val raw = GlobalLocaleDataManager.data(namespace).getRaw(lang = lang, key = key)
                                     if (raw == null) {
                                         sender.sendMessage("'${key}' key is null")
                                     } else {

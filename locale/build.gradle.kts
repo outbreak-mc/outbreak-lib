@@ -2,29 +2,24 @@ plugins {
     `maven-publish`
     `java-library`
 }
+group = "${rootProject.group}.utils.locale"
+version = rootProject.version
 
 dependencies {
-    implementation(project(":locale"))
-    implementation(project(":resapi"))
+    implementation(project(":api"))
+    compileOnly(rootProject.libs.apache.commons.text)
     compileOnly(rootProject.libs.adventure.api)
     compileOnly(rootProject.libs.adventure.text.minimessage)
     compileOnly(rootProject.libs.adventure.text.logger)
-    compileOnly(rootProject.libs.apache.commons.text)
 }
-
-// tasks.jar {
-//     from(project(":locale").sourceSets.main.get().output)
-//     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-// }
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = rootProject.group.toString()
-            artifactId = "utils"
+            artifactId = "locale"
             version = rootProject.version.toString()
             from(components["java"])
         }
     }
 }
-

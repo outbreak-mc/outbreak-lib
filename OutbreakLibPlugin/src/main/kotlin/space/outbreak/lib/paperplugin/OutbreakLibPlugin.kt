@@ -1,23 +1,23 @@
 package space.outbreak.lib.paperplugin
 
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
+import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import space.outbreak.lib.ConfigUtils
-import space.outbreak.lib.db.connectToDB
-import space.outbreak.lib.db.initDatabaseTables
-import space.outbreak.lib.db.loadAllFromDB
-import space.outbreak.lib.locale.KeyFormat
-import space.outbreak.lib.locale.LocaleDataManager
+import space.outbreak.lib.api.locale.GlobalLocaleDataManager
+import space.outbreak.lib.utils.ConfigUtils
+import space.outbreak.lib.utils.db.connectToDB
+import space.outbreak.lib.utils.locale.KeyStyle
+import space.outbreak.lib.utils.locale.db.initDatabaseTables
+import space.outbreak.lib.utils.locale.db.loadAllFromDB
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+import kotlin.io.path.absolute
+import kotlin.io.path.name
 import kotlin.time.measureTime
 
 class OutbreakLibPlugin : JavaPlugin() {
-    private val configUtils = ConfigUtils(dataPath)
-    private val command by lazy {
-        LocaleDebugCommand(this)
-    }
+    private val configUtils = ConfigUtils(dataPath, this.javaClass.classLoader)
+    private val command by lazy { LocaleDebugCommand(this) }
     private val localeDbProps = dataFolder.resolve("db.properties")
     private var loadTime: Long = 0L
 
@@ -27,35 +27,45 @@ class OutbreakLibPlugin : JavaPlugin() {
         }
     }
 
-    var job: CompletableFuture<*>? = null
+    private var job: CompletableFuture<*>? = null
 
-    fun printStats(): List<Component> {
-        val nss = LocaleDataManager.namespaces
+    private fun getServerName(): String {
+        val nameInConfig = config.getString("server-name")
+        return if (nameInConfig.isNullOrBlank())
+            dataPath.absolute().parent.parent.name
+        else
+            nameInConfig
+    }
+
+    fun printStats(): L.LOADED__STATS {
+        val nss = GlobalLocaleDataManager.namespaces
         var keys = 0
         var placeholders = 0
         var tags = 0
 
         for (ns in nss) {
-            val data = LocaleDataManager.data(ns)
+            val data = GlobalLocaleDataManager.data(ns)
             placeholders += data.getGlobalPlaceholders().size
             tags += data.getCustomColorTags().size
 
             for (lang in data.languages) {
-                keys += data.getKeys(lang, KeyFormat.ENUM_STYLE).size
+                keys += data.getKeys(lang, KeyStyle.ENUM_KEY).size
                 placeholders += data.getLangSpecificPlaceholders(lang).size
             }
         }
 
-        val text = arrayOf(
-            "OutbreakLib loaded locales in <yellow>${loadTime}</yellow> ms",
-            "Namespaces: (<yellow>${nss.size}</yellow>) ${nss.joinToString(", ") { "<green>${it}</green>" }}",
-            "Total: <yellow>${keys}</yellow> keys | <yellow>${placeholders}</yellow> placeholders | <yellow>${tags}</yellow> color tags"
+        return L.LOADED__STATS(
+            `load-time` = loadTime,
+            ns = nss,
+            `total-keys` = keys,
+            `total-color-tags` = tags,
+            `total-placeholders` = placeholders,
+            nsFormat = L.LOADED__NS_FORMAT().raw(null)
         )
-
-        return text.map { miniMessage().deserialize(it) }
     }
 
     override fun onLoad() {
+        saveDefaultConfig()
         job = CompletableFuture.runAsync({
             reload()
         }, Executors.newCachedThreadPool())
@@ -66,8 +76,8 @@ class OutbreakLibPlugin : JavaPlugin() {
         loadTime = measureTime {
             if (localeDbProps.exists()) {
                 val db = connectToDB(localeDbProps)
-                LocaleDataManager.initDatabaseTables(db)
-                LocaleDataManager.loadAllFromDB(db, listOf("*"))
+                GlobalLocaleDataManager.initDatabaseTables(db)
+                GlobalLocaleDataManager.loadAllFromDB(db, listOf("*"), server = getServerName())
             } else {
                 configUtils.extractAndGetResourceFile("_db.properties")
                 logger.severe("Locale database not loaded! Configure \"_db.properties\" correctly and rename it to \"db.properties\"")
@@ -88,7 +98,7 @@ class OutbreakLibPlugin : JavaPlugin() {
             componentLogger.info(miniMessage().deserialize(msg))
         }
 
-        printStats().forEach { componentLogger.info(it) }
+        printStats().send(Bukkit.getConsoleSender())
         command.register()
     }
 

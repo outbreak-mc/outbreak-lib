@@ -3,28 +3,25 @@ plugins {
     `java-library`
 }
 
+group = "${rootProject.group}.api"
+version = rootProject.version
+
 dependencies {
+    implementation(project(":utils"))
     implementation(project(":locale"))
-    implementation(project(":resapi"))
+    implementation(project(":locale-db"))
+
     compileOnly(rootProject.libs.adventure.api)
     compileOnly(rootProject.libs.adventure.text.minimessage)
-    compileOnly(rootProject.libs.adventure.text.logger)
-    compileOnly(rootProject.libs.apache.commons.text)
 }
-
-// tasks.jar {
-//     from(project(":locale").sourceSets.main.get().output)
-//     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-// }
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = rootProject.group.toString()
-            artifactId = "utils"
+            artifactId = "api"
             version = rootProject.version.toString()
             from(components["java"])
         }
     }
 }
-

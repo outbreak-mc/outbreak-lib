@@ -18,7 +18,7 @@ paper {
     load = BukkitPluginDescription.PluginLoadOrder.STARTUP
 
     main = "space.outbreak.lib.paperplugin.OutbreakLibPlugin"
-    loader = "space.outbreak.lib.paper.shaded.Loader"
+    loader = "space.outbreak.lib.utils.paper.Loader"
 
     hasOpenClassloader = false
 
@@ -37,13 +37,15 @@ paper {
 
 dependencies {
     paperLibrary(kotlin("stdlib"))
+    paperLibrary(kotlin("reflect"))
     paperweight.paperDevBundle(rootProject.libs.versions.paper.version)
 
-    implementation(project(":db"))
-    implementation(project(":db-shaded-utils"))
     implementation(project(":utils"))
-    implementation(project(":paper"))
-    implementation(project(":paper-shaded"))
+    implementation(project(":locale"))
+    implementation(project(":locale-db"))
+    implementation(project(":utils-db"))
+    implementation(project(":utils-paper"))
+    implementation(project(":api"))
 
     implementation(rootProject.libs.jetbrains.exposed.core)
     implementation(rootProject.libs.jetbrains.exposed.migration)
@@ -75,7 +77,7 @@ tasks.shadowJar {
     }
 
     archiveFileName.set("${rootProject.name}Plugin-${rootProject.version}.jar")
-    // destinationDirectory.set(file("D:\\test_server\\plugins\\"))
+    destinationDirectory.set(file("D:/test_server/plugins/"))
 }
 
 tasks.assemble {
