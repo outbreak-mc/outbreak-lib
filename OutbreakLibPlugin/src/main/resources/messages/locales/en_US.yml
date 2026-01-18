@@ -1,0 +1,6 @@
+loaded:
+  ns-format: "<green><namespace></green>"
+  stats: |-
+    Locales loaded in <yellow><load-time></yellow> ms
+    Namespaces (<yellow><total-namespaces></yellow>): <namespaces>
+    Total: <yellow><total-keys></yellow> keys | <gray>\<placeholders not supported></gray> | <yellow><total-color-tags></yellow> color tags

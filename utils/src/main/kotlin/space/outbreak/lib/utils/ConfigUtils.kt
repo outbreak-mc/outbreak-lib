@@ -5,14 +5,15 @@ import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
 import org.yaml.snakeyaml.representer.Representer
-import space.outbreak.lib.utils.locale.LocaleData
-import space.outbreak.lib.utils.locale.LocaleDataManagerBase
-import space.outbreak.lib.utils.locale.PlaceholdersConfig
+import space.outbreak.lib.locale.GlobalLocaleData
+import space.outbreak.lib.locale.LocaleData
+import space.outbreak.lib.locale.ofExactLocale
 import space.outbreak.lib.utils.resapi.Res
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.*
 import kotlin.io.path.*
 
 class ConfigUtils(
@@ -29,32 +30,36 @@ class ConfigUtils(
     private val res = Res(cl)
 
     /**
-     * Находит в ресурсах файл [resourcePath], распаковывает его в папку
-     * плагина, читает его как yaml и парсит в объект типа [type]
+     * Находит в ресурсах файл [resourcePath], распаковывает его
+     * в папку плагина, читает его как yaml и парсит в объект типа [type].
+     * Если файла в ресурсах нет, возвращает null.
      * */
-    fun <T> readConfig(resourcePath: String, type: Class<T>): T {
-        return Yaml(CustomClassLoaderConstructor(type.classLoader, LoaderOptions()), yamlRepr).loadAs(
-            extractAndGetResourceFile(resourcePath).inputStream(),
-            type
-        )
+    fun <T> readConfig(resourcePath: String, type: Class<T>): T? {
+        val input = extractAndGetResourceFile(resourcePath) ?: return null
+        return Yaml(CustomClassLoaderConstructor(type.classLoader, LoaderOptions()), yamlRepr)
+            .loadAs(input.inputStream(), type)
     }
 
     // fun writeConfig(resourcePath: String, data: Any) {
     //     yamlMapper.writeValue(extractAndGetResourceFile(resourcePath), data)
     // }
 
-    fun extractAndGetResourceFile(path: String): File {
+    /**
+     * Извлекает файл или папку из ресурсов jar в папку плагина и
+     * возвращает [File] или null, если файла в ресурсах нет
+     * */
+    fun extractAndGetResourceFile(path: String): File? {
         val outputFile = dataDir.absolute().resolve(path.trimStart('/'))
-        if (outputFile.isDirectory() && !outputFile.exists()) {
-            outputFile.createDirectories()
-        } else if (!outputFile.isDirectory() && !outputFile.parent.exists()) {
-            outputFile.parent.createDirectories()
-        }
 
         if (!outputFile.exists()) {
             val resourcePath = path.trimStart('/')
-            val inputStream = object {}.javaClass.classLoader.getResourceAsStream(resourcePath)
-                ?: throw FileNotFoundException("Resource not found: ${resourcePath}")
+            val inputStream = object {}.javaClass.classLoader.getResourceAsStream(resourcePath) ?: return null
+
+            if (outputFile.isDirectory())
+                outputFile.createDirectories()
+            else if (!outputFile.parent.exists())
+                outputFile.parent.createDirectories()
+
             Files.copy(inputStream, outputFile)
         }
 
@@ -78,36 +83,38 @@ class ConfigUtils(
      * Загружает файлы локализации из папки плагина/messages.
      * Также дораспаковывает недостающие файлы локализаций из ресурсов.
      * */
-    fun loadLocalesFolder(ld: LocaleData): List<String> {
-        val msgsPath = "/messages"
+    fun loadLocalesFolder(namespace: String, ld: LocaleData = GlobalLocaleData): List<String> {
+        val msgsPath = "messages"
         ld.clear()
 
         res.extract(msgsPath, dataDir.toFile(), false)
 
         val locales = readLocaleFiles { lang, data ->
-            ld.load(lang, data)
+            ld.load(ofExactLocale(lang), namespace, data)
         }
 
         if (locales.isEmpty())
             throw FileNotFoundException("No locales found neither in resources nor in plugin folder${msgsPath}!")
 
-        val placeholdersConfig = readConfig("${msgsPath}/placeholders.yml", PlaceholdersConfig::class.java)
+        readConfig("${msgsPath}/placeholders.yml", PlaceholdersConfig::class.java)?.also { placeholdersConfig ->
+            ld.addCustomColorTags(placeholdersConfig.`custom-color-tags`)
+        }
 
-        ld.addPlaceholders(null, placeholdersConfig.`static-placeholders`)
-        ld.addCustomColorTags(placeholdersConfig.`custom-color-tags`)
+        // ld.addPlaceholders(null, placeholdersConfig.`static-placeholders`)
 
         return locales
     }
 
     /**
      * Распаковывает из ресурсов файл [file] в папку плагина, если его не существует,
-     * и читает данные из него в [LocaleDataManagerBase] как язык [lang]. Существующие данные этого
+     * и читает данные из него в [space.outbreak.lib.utils.locale.LocaleDataManagerBase] как язык [lang]. Существующие данные этого
      * языка предварительно очищаются.
      * */
-    fun loadSingleLocaleFile(ld: LocaleData, file: String = "locale.yml", lang: Locale) {
-        ld.removeLang(lang)
+    fun loadSingleLocaleFile(ld: LocaleData, namespace: String, file: String = "locale.yml", lang: Locale? = null) {
+        val l = lang ?: ld.defaultLang
         res.saveResource(file, dataDir.toFile(), false)
-        ld.load(lang, yaml.load(dataDir.resolve(file).inputStream()))
+        val map: Map<String, Any> = yaml.load(dataDir.resolve(file).inputStream())
+        ld.load(l, namespace, map)
     }
 }
 

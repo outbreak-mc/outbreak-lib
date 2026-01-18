@@ -5,6 +5,7 @@ import java.net.URL
 import java.nio.file.*
 import java.util.stream.Stream
 import kotlin.io.path.isDirectory
+import kotlin.io.path.relativeTo
 
 @Suppress("MemberVisibilityCanBePrivate")
 class Res(private val cl: ClassLoader) {
@@ -35,7 +36,8 @@ class Res(private val cl: ClassLoader) {
     /** Получает список файлов и папок в ресурсах jar по пути [path] */
     fun listResourceFiles(path: String): Stream<Path>? {
         val dirPath = getResourceAsPath(path) ?: return null
-        return Files.list(dirPath)
+        val p = dirPath.relativeTo(dirPath.root)
+        return Files.list(p)
     }
 
     /** Проверяет, существует ли файл или папка по пути [path] в ресурсах jar */

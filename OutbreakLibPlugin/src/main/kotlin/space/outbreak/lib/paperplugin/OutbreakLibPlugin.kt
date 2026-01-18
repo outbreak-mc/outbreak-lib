@@ -1,14 +1,14 @@
 package space.outbreak.lib.paperplugin
 
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
+import net.kyori.adventure.translation.GlobalTranslator
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import space.outbreak.lib.api.locale.GlobalLocaleDataManager
+import space.outbreak.lib.locale.GlobalLocaleData
+import space.outbreak.lib.locale.LocaleData
+import space.outbreak.lib.locale.db.LocaleDb
 import space.outbreak.lib.utils.ConfigUtils
 import space.outbreak.lib.utils.db.connectToDB
-import space.outbreak.lib.utils.locale.KeyStyle
-import space.outbreak.lib.utils.locale.db.initDatabaseTables
-import space.outbreak.lib.utils.locale.db.loadAllFromDB
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import kotlin.io.path.absolute
@@ -17,7 +17,7 @@ import kotlin.time.measureTime
 
 class OutbreakLibPlugin : JavaPlugin() {
     private val configUtils = ConfigUtils(dataPath, this.javaClass.classLoader)
-    private val command by lazy { LocaleDebugCommand(this) }
+    private val command by lazy { LocaleDebugCommand(this, GlobalLocaleData) }
     private val localeDbProps = dataFolder.resolve("db.properties")
     private var loadTime: Long = 0L
 
@@ -37,20 +37,16 @@ class OutbreakLibPlugin : JavaPlugin() {
             nameInConfig
     }
 
-    fun printStats(): L.LOADED__STATS {
-        val nss = GlobalLocaleDataManager.namespaces
+    fun printStats(ld: LocaleData): L.LOADED__STATS {
+        val nss = ld.namespaces
         var keys = 0
-        var placeholders = 0
         var tags = 0
 
         for (ns in nss) {
-            val data = GlobalLocaleDataManager.data(ns)
-            placeholders += data.getGlobalPlaceholders().size
-            tags += data.getCustomColorTags().size
+            tags += ld.getCustomColorTags().size
 
-            for (lang in data.languages) {
-                keys += data.getKeys(lang, KeyStyle.ENUM_KEY).size
-                placeholders += data.getLangSpecificPlaceholders(lang).size
+            for (lang in ld.languages) {
+                keys += ld.getKeys(lang).size
             }
         }
 
@@ -59,8 +55,7 @@ class OutbreakLibPlugin : JavaPlugin() {
             ns = nss,
             `total-keys` = keys,
             `total-color-tags` = tags,
-            `total-placeholders` = placeholders,
-            nsFormat = L.LOADED__NS_FORMAT().raw(null)
+//            `total-placeholders` = placeholders
         )
     }
 
@@ -73,11 +68,15 @@ class OutbreakLibPlugin : JavaPlugin() {
 
     fun reload() {
         prepareFiles()
+
         loadTime = measureTime {
+            configUtils.loadLocalesFolder("outbreaklib", GlobalLocaleData)
+
             if (localeDbProps.exists()) {
-                val db = connectToDB(localeDbProps)
-                GlobalLocaleDataManager.initDatabaseTables(db)
-                GlobalLocaleDataManager.loadAllFromDB(db, listOf("*"), server = getServerName())
+                val localeDb = LocaleDb(connectToDB(localeDbProps))
+                localeDb.initDatabaseTables()
+                localeDb.loadAllFromDB(server = getServerName())
+
             } else {
                 configUtils.extractAndGetResourceFile("_db.properties")
                 logger.severe("Locale database not loaded! Configure \"_db.properties\" correctly and rename it to \"db.properties\"")
@@ -98,12 +97,13 @@ class OutbreakLibPlugin : JavaPlugin() {
             componentLogger.info(miniMessage().deserialize(msg))
         }
 
-        printStats().send(Bukkit.getConsoleSender())
+        printStats(GlobalLocaleData).send(Bukkit.getConsoleSender())
         command.register()
     }
 
     override fun onDisable() {
         command.unregister()
         job?.cancel(true)
+        GlobalTranslator.translator().removeSource(GlobalLocaleData.translator)
     }
 }

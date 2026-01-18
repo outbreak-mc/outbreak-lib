@@ -3,13 +3,13 @@ plugins {
     `java-library`
 }
 
+group = "${rootProject.group}.locale.paper"
+version = rootProject.version
+
 dependencies {
+    compileOnly(rootProject.libs.paper)
+    compileOnly(rootProject.libs.commandapi.core)
     implementation(project(":locale:locale"))
-    implementation(project(":resapi"))
-    compileOnly(rootProject.libs.adventure.api)
-    compileOnly(rootProject.libs.adventure.text.minimessage)
-    compileOnly(rootProject.libs.adventure.text.logger)
-    compileOnly(rootProject.libs.apache.commons.text)
 }
 
 // tasks.jar {
@@ -21,10 +21,9 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = rootProject.group.toString()
-            artifactId = "utils"
+            artifactId = "locale-paper"
             version = rootProject.version.toString()
             from(components["java"])
         }
     }
 }
-

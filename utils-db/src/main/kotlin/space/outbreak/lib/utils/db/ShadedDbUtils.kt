@@ -17,8 +17,9 @@ fun connectToDB(configFile: File): Database {
  * По умолчанию включает `foreign_keys`. */
 fun connectToSqlite(file: File, extraConfig: ((HikariConfig) -> Unit)? = null): Database {
     val conf = HikariConfig().apply {
-        jdbcUrl = "jdbc:sqlite:${file}?foreign_keys=on"
         driverClassName = "org.sqlite.JDBC"
+        jdbcUrl = "jdbc:sqlite:${file}?foreign_keys=on"
+        jdbcUrl = "jdbc:sqlite:${file}?foreign_keys=on"
         maximumPoolSize = 5
         isAutoCommit = true
         extraConfig?.invoke(this)

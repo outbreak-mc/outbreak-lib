@@ -38,12 +38,13 @@ paper {
 dependencies {
     paperLibrary(kotlin("stdlib"))
     paperLibrary(kotlin("reflect"))
-    paperweight.paperDevBundle(rootProject.libs.versions.paper.version)
+    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
 
     implementation(project(":utils"))
-    implementation(project(":locale"))
-    implementation(project(":locale-db"))
     implementation(project(":utils-db"))
+    implementation(project(":locale:locale"))
+    implementation(project(":locale:db"))
+    implementation(project(":locale:paper"))
     implementation(project(":utils-paper"))
     implementation(project(":api"))
 
@@ -77,7 +78,7 @@ tasks.shadowJar {
     }
 
     archiveFileName.set("${rootProject.name}Plugin-${rootProject.version}.jar")
-    destinationDirectory.set(file("D:/test_server/plugins/"))
+    destinationDirectory.set(file("/home/shiny/OUTBREAK/test_server/plugins/"))
 }
 
 tasks.assemble {

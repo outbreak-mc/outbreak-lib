@@ -1,0 +1,6 @@
+loaded:
+  ns-format: "<green><namespace></green>"
+  stats: |-
+    Переводы загружены за <yellow><load-time></yellow> ms
+    Нэймспэйсы (<yellow><total-namespaces></yellow>): <namespaces>
+    Всего: <yellow><total-keys></yellow> ключей | <gray>\<плейсхолдеры не поддерживаются></gray> | <yellow><total-color-tags></yellow> цветовых тэгов
