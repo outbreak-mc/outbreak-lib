@@ -3,18 +3,15 @@ package space.outbreak.lib.locale
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.ComponentLike
-import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.Tag
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
-import net.kyori.adventure.text.minimessage.translation.Argument
 import net.kyori.adventure.translation.GlobalTranslator
 import net.kyori.adventure.translation.Translator
 import org.apache.commons.text.StringSubstitutor
-import space.outbreak.lib.locale.cache.MsgRayCache
 import java.util.*
 
 
@@ -74,8 +71,24 @@ open class LocaleData(
         return ss.replace(raw(lang, key))
     }
 
+    fun raw(key: Key, vararg replacing: LocalePairBase<*>): String {
+        val valueMap = replacing.associate { (k, v) ->
+            k to if (v is Component) {
+                serializer.serialize(v)
+            } else {
+                v.toString()
+            }
+        }
+        val ss = StringSubstitutor(valueMap, "<", ">", '\\')
+        return ss.replace(raw(defaultLang, key))
+    }
+
     fun raw(lang: Locale, key: Key): String {
         return compiledTree[lang]?.get(key) ?: key.toString()
+    }
+
+    fun raw(key: Key): String {
+        return compiledTree[defaultLang]?.get(key) ?: key.toString()
     }
 
     fun rawOrNull(lang: Locale, key: Key): String? {
@@ -96,14 +109,15 @@ open class LocaleData(
     }
 
     companion object {
-        private fun processArgs(vararg replacing: LocalePairBase<*>): Array<ComponentLike> {
-            return Array(replacing.size) { i ->
-                when (val el = replacing[i]) {
-                    is LocalePairBase.component -> Argument.component(el.key, el.value)
-                    is LocalePairBase.string -> Argument.string(el.key, el.value)
-                }
-            }
-        }
+//        private fun processArgs(vararg replacing: LocalePairBase<*>): Array<ComponentLike> {
+//            return Array(replacing.size) { i ->
+//                when (val el = replacing[i]) {
+//                    is LocalePairBase.component -> Argument.component(el.key, el.value)
+//                    is LocalePairBase.string -> Argument.string(el.key, el.value)
+//                    is LocalePairBase.il -> Argument.component(el.key, el.value.comp())
+//                }
+//            }
+//        }
 
         private fun replacingToPlaceholders(vararg replacing: LocalePairBase<*>): List<TagResolver.Single> {
             return replacing.map { (key, value) ->
@@ -115,17 +129,8 @@ open class LocaleData(
         }
     }
 
-    fun tcomp(key: Key, vararg replacing: LPB): TranslatableComponent {
-        val id = MsgRayCache.addToTmp(key, replacing)
-        return Component.translatable("$LIBCACHED_NS:$id")
-    }
-
-    /** @return Переведённый на язык [lang] компонент. Если перевода не найдено, возвращает ключ перевода. */
-    fun comp(lang: Locale, key: Key, vararg replacing: LPB): Component {
-        return serializer.deserialize(
-            raw(lang, key),
-            *replacingToPlaceholders(*replacing).toTypedArray()
-        )
+    fun getMiniMessage(): MiniMessage {
+        return serializer
     }
 
     fun getKeys(lang: Locale): Collection<Key> {

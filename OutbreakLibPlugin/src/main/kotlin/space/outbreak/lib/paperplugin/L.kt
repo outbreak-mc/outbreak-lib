@@ -4,10 +4,9 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
 import space.outbreak.lib.locale.GlobalLocaleData
 import space.outbreak.lib.locale.SealedLocaleBase
-import space.outbreak.lib.locale.means
 
 sealed class L : SealedLocaleBase({ GlobalLocaleData }, "outbreaklib") {
-    object LOADED__NS_FORMAT : L()
+    class LOADED__NS_FORMAT(val namespace: String) : L()
 
     class LOADED__STATS(
         val `load-time`: Long,
@@ -17,7 +16,7 @@ sealed class L : SealedLocaleBase({ GlobalLocaleData }, "outbreaklib") {
         val `total-color-tags`: Int,
     ) : L() {
         //        val `namespaces` = miniMessage().deserialize(ns.joinToString(", ") { nsFormat.replace("<namespace>", it) })
-        private val _nsComps = ns.map { LOADED__NS_FORMAT.comp("namespace" means it) }
+        private val _nsComps = ns.map { LOADED__NS_FORMAT(it).tcomp() }
 
         val `namespaces` = Component.join(
             JoinConfiguration.separator(Component.text(",")),

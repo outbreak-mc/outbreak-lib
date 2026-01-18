@@ -1,28 +1,26 @@
 package space.outbreak.lib.locale
 
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 
 sealed class LocalePairBase<V> {
     abstract val key: String
     abstract val value: V
-    abstract val valueAsString: String
+//    abstract val valueAsString: String
 
     class string(
         override val key: String,
         override val value: String,
-    ) : LocalePairBase<String>() {
-        override val valueAsString: String get() = value
-    }
+    ) : LocalePairBase<String>()
 
     class component(
         override val key: String,
         override val value: Component,
-    ) : LocalePairBase<Component>() {
-        override val valueAsString: String by lazy {
-            miniMessage().serialize(value)
-        }
-    }
+    ) : LocalePairBase<Component>()
+
+    class il(
+        override val key: String,
+        override val value: IL,
+    ) : LocalePairBase<IL>()
 
     operator fun component1(): String {
         return key
@@ -34,7 +32,9 @@ sealed class LocalePairBase<V> {
 }
 
 infix fun String.means(that: Any): LocalePairBase<*> {
-    if (that is Component)
-        return LocalePairBase.component(this, that)
-    return LocalePairBase.string(this, that.toString())
+    return when (that) {
+        is Component -> LocalePairBase.component(this, that)
+        is IL -> LocalePairBase.il(this, that)
+        else -> LocalePairBase.string(this, that.toString())
+    }
 }

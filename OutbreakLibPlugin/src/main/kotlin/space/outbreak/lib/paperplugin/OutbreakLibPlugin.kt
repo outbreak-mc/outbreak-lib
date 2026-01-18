@@ -6,6 +6,7 @@ import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import space.outbreak.lib.locale.GlobalLocaleData
 import space.outbreak.lib.locale.LocaleData
+import space.outbreak.lib.locale.cache.MsgCache
 import space.outbreak.lib.locale.db.LocaleDb
 import space.outbreak.lib.utils.ConfigUtils
 import space.outbreak.lib.utils.db.connectToDB
@@ -68,6 +69,7 @@ class OutbreakLibPlugin : JavaPlugin() {
 
     fun reload() {
         prepareFiles()
+        MsgCache.clear()
 
         loadTime = measureTime {
             configUtils.loadLocalesFolder("outbreaklib", GlobalLocaleData)
