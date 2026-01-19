@@ -3,7 +3,7 @@ package space.outbreak.lib.locale
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
-import space.outbreak.lib.locale.cache.MsgCache
+import space.outbreak.lib.locale.IL.Companion.replacingToArguments
 import java.util.*
 import kotlin.reflect.KProperty
 
@@ -48,8 +48,11 @@ abstract class SealedLocaleBase(
     override fun tcomp(vararg replacing: LPB): TranslatableComponent {
         // Опасная ловушка: если сделать как сделано в других переопределниях, в кэш попадут
         // дубликаты поверх встроенных реплейсингов, которые будут ломать парсинг
-        val id = MsgCache.addToTmp(langKey, this, replacing)
-        return Component.translatable("$LIBCACHED_NS:$id")
+//        val id = MsgCache.addToTmp(langKey, this)
+        return Component.translatable(
+            langKey.asString(),
+            replacingToArguments(getLocaleData(), *replacingWithAdditions(*replacing))
+        )
     }
 
     override fun raw(lang: Locale, vararg replacing: LocalePairBase<*>): String {

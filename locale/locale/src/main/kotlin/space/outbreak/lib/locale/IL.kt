@@ -7,7 +7,8 @@ import net.kyori.adventure.text.ComponentLike
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
-import net.kyori.adventure.translation.GlobalTranslator
+import net.kyori.adventure.text.minimessage.translation.Argument
+import org.apache.commons.text.StringSubstitutor
 import space.outbreak.lib.locale.cache.MsgCache
 import java.util.*
 
@@ -15,13 +16,26 @@ typealias LPB = LocalePairBase<*>
 
 interface IL {
     companion object {
-        fun replacingToPlaceholders(lang: Locale, vararg replacing: LPB): List<TagResolver.Single> {
+        fun replacingToPlaceholders(
+            lang: Locale,
+            vararg replacing: LPB
+        ): List<TagResolver.Single> {
             return replacing.map { (key, value) ->
                 when (value) {
                     is IL -> Placeholder.component(key, value.comp(lang))
-                    is TranslatableComponent -> Placeholder.component(key, GlobalTranslator.render(value, lang))
                     is ComponentLike -> Placeholder.component(key, value)
                     else -> Placeholder.parsed(key, value.toString())
+                }
+            }
+        }
+
+        fun replacingToArguments(localeData: LocaleData, vararg replacing: LPB): List<ComponentLike> {
+            return replacing.map { (key, value) ->
+                when (value) {
+                    is IL -> Argument.component(key, value.tcomp())
+                    is ComponentLike -> Argument.component(key, value)
+                    else -> Argument.component(key, localeData.serializer.deserialize(value.toString()))
+//                    else -> Argument.string(key, value.toString())
                 }
             }
         }
@@ -35,6 +49,18 @@ interface IL {
                     throw IllegalStateException("${k} is already in keys for ${key}!")
             }
         }
+
+        private fun processRaw(localeData: LocaleData, raw: String, vararg replacing: LPB): String {
+            val valueMap = replacing.associate { (k, v) ->
+                k to if (v is Component) {
+                    localeData.serializer.serialize(v)
+                } else {
+                    v.toString()
+                }
+            }
+            val ss = StringSubstitutor(valueMap, "<", ">", '\\')
+            return ss.replace(raw)
+        }
     }
 
     fun getLocaleData(): LocaleData = GlobalLocaleData
@@ -42,15 +68,15 @@ interface IL {
     val langKey: Key
 
     fun raw(lang: Locale, vararg replacing: LPB): String {
-        return getLocaleData().raw(lang, langKey, *replacing)
+        return processRaw(getLocaleData(), getLocaleData().raw(lang, langKey), *replacing)
     }
 
     fun raw(vararg replacing: LPB): String {
-        return getLocaleData().raw(langKey, *replacing)
+        return getLocaleData().raw(langKey)
     }
 
     fun rawOrNull(lang: Locale, vararg replacing: LocalePairBase<*>): String? {
-        return getLocaleData().rawOrNull(lang, langKey, *replacing)
+        return processRaw(getLocaleData(), getLocaleData().rawOrNull(lang, langKey) ?: return null, *replacing)
     }
 
     /** @return Переведённый на язык [lang] компонент.
@@ -64,27 +90,9 @@ interface IL {
             mm.deserialize(raw(lang), *replacingToPlaceholders(lang, *replacing).toTypedArray())
     }
 
-//    /** @return Переведённый на язык [lang] компонент. Если перевода не найдено, возвращает null. */
-//    fun compOrNull(lang: Locale, vararg replacing: LPB): Component? {
-//        val mm = getLocaleData().getMiniMessage()
-//        val raw = rawOrNull(lang) ?: return null
-//        return if (replacing.isEmpty()) {
-//            MsgCache.getOrPutToStaticCache(langKey.asString(), lang) { mm.deserialize(raw) }
-//        } else {
-//            mm.deserialize(raw, *replacingToPlaceholders(lang, *replacing).toTypedArray())
-//        }
-//    }
-
-//    /**
-//     * Вызывается перед финальным созданием компонента, в том числе в вызовах через [tcomp],
-//     * когда язык отправителя становится известен только в момент отправки, и позволяет
-//     * изменить состояние объекта в этот момент.
-//     * */
-//    fun onCompute(lang: Locale, audience: Audience) {}
-
     fun tcomp(vararg replacing: LPB): TranslatableComponent {
-        val id = MsgCache.addToTmp(langKey, this, replacing)
-        return Component.translatable("$LIBCACHED_NS:$id")
+//        val id = MsgCache.addToTmp(langKey, this)
+        return Component.translatable(langKey.asString(), replacingToArguments(getLocaleData(), *replacing))
     }
 
     fun send(audience: Audience, vararg replacing: LPB) {

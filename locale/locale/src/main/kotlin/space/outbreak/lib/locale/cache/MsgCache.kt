@@ -5,7 +5,6 @@ import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
 import space.outbreak.lib.locale.IL
-import space.outbreak.lib.locale.LPB
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -22,7 +21,7 @@ object MsgCache {
         .build<MsgRayID, Component>()
 
     private data class StaticCacheKey(val key: String, val lang: Locale)
-    class TmpCacheEntry(val key: Key, val il: IL, val args: Array<out LPB>)
+    class TmpCacheEntry(val key: Key, val il: IL)
 
     // Кэш для сообщений, которые не имеют аргументов и парсить их каждый раз - бесполезно.
     private val staticCache = mutableMapOf<StaticCacheKey, Component>()
@@ -41,9 +40,9 @@ object MsgCache {
         return staticCache.getOrPut(StaticCacheKey(key, lang), defaultValue)
     }
 
-    fun addToTmp(key: Key, il: IL, args: Array<out LPB>): Long {
+    fun addToTmp(key: Key, il: IL): Long {
         val id = newId()
-        tmpCache[id] = TmpCacheEntry(key, il, args)
+        tmpCache[id] = TmpCacheEntry(key, il)
         return id
     }
 

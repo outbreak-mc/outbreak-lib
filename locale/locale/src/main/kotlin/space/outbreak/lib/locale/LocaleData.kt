@@ -1,7 +1,6 @@
 package space.outbreak.lib.locale
 
 import net.kyori.adventure.key.Key
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.ComponentLike
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -11,7 +10,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
 import net.kyori.adventure.translation.GlobalTranslator
 import net.kyori.adventure.translation.Translator
-import org.apache.commons.text.StringSubstitutor
 import java.util.*
 
 
@@ -59,30 +57,6 @@ open class LocaleData(
         return (isNotBlank() && first().isUpperCase()) && contains("__") && !contains(".")
     }
 
-    fun raw(lang: Locale, key: Key, vararg replacing: LocalePairBase<*>): String {
-        val valueMap = replacing.associate { (k, v) ->
-            k to if (v is Component) {
-                serializer.serialize(v)
-            } else {
-                v.toString()
-            }
-        }
-        val ss = StringSubstitutor(valueMap, "<", ">", '\\')
-        return ss.replace(raw(lang, key))
-    }
-
-    fun raw(key: Key, vararg replacing: LocalePairBase<*>): String {
-        val valueMap = replacing.associate { (k, v) ->
-            k to if (v is Component) {
-                serializer.serialize(v)
-            } else {
-                v.toString()
-            }
-        }
-        val ss = StringSubstitutor(valueMap, "<", ">", '\\')
-        return ss.replace(raw(defaultLang, key))
-    }
-
     fun raw(lang: Locale, key: Key): String {
         return compiledTree[lang]?.get(key) ?: key.toString()
     }
@@ -95,18 +69,18 @@ open class LocaleData(
         return compiledTree[lang]?.get(key)
     }
 
-    fun rawOrNull(lang: Locale, key: Key, vararg replacing: LocalePairBase<*>): String? {
-        val str = rawOrNull(lang, key) ?: return null
-        val valueMap = replacing.associate { (k, v) ->
-            k to if (v is Component) {
-                serializer.serialize(v)
-            } else {
-                v.toString()
-            }
-        }
-        val ss = StringSubstitutor(valueMap, "<", ">", '\\')
-        return ss.replace(str)
-    }
+//    fun rawOrNull(lang: Locale, key: Key, vararg replacing: LocalePairBase<*>): String? {
+//        val str = rawOrNull(lang, key) ?: return null
+//        val valueMap = replacing.associate { (k, v) ->
+//            k to if (v is Component) {
+//                serializer.serialize(v)
+//            } else {
+//                v.toString()
+//            }
+//        }
+//        val ss = StringSubstitutor(valueMap, "<", ">", '\\')
+//        return ss.replace(str)
+//    }
 
     companion object {
 //        private fun processArgs(vararg replacing: LocalePairBase<*>): Array<ComponentLike> {

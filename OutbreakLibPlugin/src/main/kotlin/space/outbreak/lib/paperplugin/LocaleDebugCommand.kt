@@ -6,6 +6,7 @@ import dev.jorel.commandapi.arguments.StringArgument
 import dev.jorel.commandapi.kotlindsl.*
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
+import org.bukkit.Bukkit
 import space.outbreak.lib.locale.GlobalLocaleData
 import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.ofExactLocale
@@ -43,7 +44,7 @@ class LocaleDebugCommand(
                     anyExecutor { sender, _ ->
                         playerExecutor { player, _ ->
                             plugin.reload()
-                            plugin.printStats(ld).send(player)
+                            Bukkit.broadcast(plugin.printStats(ld).tcomp())
                         }
                         consoleExecutor { _, _ ->
                             plugin.reload()
