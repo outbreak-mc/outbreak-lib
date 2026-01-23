@@ -13,13 +13,13 @@ dependencies {
     compileOnly(rootProject.libs.adventure.text.logger)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = rootProject.group.toString()
-            artifactId = "locale"
-            version = rootProject.version.toString()
-            from(components["java"])
-        }
-    }
-}
+//publishing {
+//    publications {
+//        create<MavenPublication>("maven") {
+//            groupId = rootProject.group.toString()
+//            artifactId = "locale"
+//            version = rootProject.version.toString()
+//            from(components["java"])
+//        }
+//    }
+//}

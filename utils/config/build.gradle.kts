@@ -3,27 +3,22 @@ plugins {
     `java-library`
 }
 
-group = "${rootProject.group}.locale.paper"
-version = rootProject.version
+group = "${rootProject.group}.paper.shaded"
 
 dependencies {
-    compileOnly(rootProject.libs.apache.commons.text)
-    compileOnly(rootProject.libs.caffeine)
     compileOnly(rootProject.libs.paper)
     compileOnly(rootProject.libs.commandapi.core)
-    implementation(project(":locale"))
+    // compileOnly(rootProject.libs.commandapi.)
+    implementation(project(":locale:locale"))
+    implementation(project(":resapi"))
+//    implementation(project(":locale"))
 }
-
-// tasks.jar {
-//     from(project(":locale").sourceSets.main.get().output)
-//     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-// }
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = rootProject.group.toString()
-            artifactId = "locale-main"
+            artifactId = "utils-config"
             version = rootProject.version.toString()
             from(components["java"])
         }

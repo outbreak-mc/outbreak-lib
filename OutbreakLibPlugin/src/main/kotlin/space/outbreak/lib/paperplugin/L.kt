@@ -7,6 +7,7 @@ import space.outbreak.lib.locale.SealedLocaleBase
 
 sealed class L : SealedLocaleBase({ GlobalLocaleData }, "outbreaklib") {
     class LOADED__NS_FORMAT(val namespace: String) : L()
+    class LOADED__NS_SEP : L()
 
     class LOADED__STATS(
         val `load-time`: Long,
@@ -19,10 +20,18 @@ sealed class L : SealedLocaleBase({ GlobalLocaleData }, "outbreaklib") {
         private val _nsComps = ns.map { LOADED__NS_FORMAT(it).tcomp() }
 
         val `namespaces` = Component.join(
-            JoinConfiguration.separator(Component.text(",")),
+            JoinConfiguration.separator(LOADED__NS_SEP().tcomp()),
             _nsComps
         )
         val `total-namespaces`: Int = ns.size
         val `namespaces-size`: Int = ns.size
     }
+
+    class BENCHMARK(
+        val `batches`: Int,
+        val `batch-size`: Int,
+        val messages: Int,
+        val `cached-time`: Long,
+        val `direct-time`: Long,
+    ) : L()
 }

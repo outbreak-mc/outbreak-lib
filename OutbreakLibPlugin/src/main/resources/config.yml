@@ -1,1 +1,3 @@
 server-name:
+debug:
+  migrate-if-unstable: true

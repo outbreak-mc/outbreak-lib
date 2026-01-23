@@ -41,11 +41,13 @@ dependencies {
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
 
     implementation(project(":utils"))
-    implementation(project(":utils-db"))
+    implementation(project(":utils:db"))
+    implementation(project(":utils:paper"))
+    implementation(project(":utils:config"))
+    implementation(project(":resapi"))
     implementation(project(":locale:locale"))
     implementation(project(":locale:db"))
     implementation(project(":locale:paper"))
-    implementation(project(":utils-paper"))
     implementation(project(":api"))
 
     implementation(rootProject.libs.jetbrains.exposed.core)
@@ -53,6 +55,8 @@ dependencies {
     implementation(rootProject.libs.jetbrains.exposed.dao)
     implementation(rootProject.libs.jetbrains.exposed.jdbc)
     implementation(rootProject.libs.hikaricp)
+    implementation(rootProject.libs.caffeine)
+    implementation(rootProject.libs.semver)
 
     compileOnly(rootProject.libs.commandapi.core)
     compileOnly(rootProject.libs.commandapi.kotlin)
@@ -69,6 +73,8 @@ tasks.shadowJar {
     // relocate("com.fasterxml.jackson", "${rootProject.group}.shaded.com.fasterxml.jackson")
     relocate("org.jetbrains.exposed", "${rootProject.group}.shaded.exposed")
     relocate("com.zaxxer", "${rootProject.group}.shaded.hikaricp")
+    relocate("com.github.ben-manes.caffeine", "${rootProject.group}.shaded.caffeine")
+    relocate("org.semver4j:semver4j", "${rootProject.group}.shaded.semver")
     exclude("/kotlin/")
     exclude("/kotlinx/")
 

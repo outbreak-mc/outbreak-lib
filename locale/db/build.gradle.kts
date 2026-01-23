@@ -10,8 +10,10 @@ dependencies {
     compileOnly(rootProject.libs.jetbrains.exposed.core)
     compileOnly(rootProject.libs.jetbrains.exposed.migration)
     compileOnly(rootProject.libs.hikaricp)
+    compileOnly(rootProject.libs.adventure.api)
 
     implementation(project(":locale:locale"))
+    implementation(project(":utils:db"))
 
     testImplementation(project(":utils"))
     testImplementation(rootProject.libs.h2)

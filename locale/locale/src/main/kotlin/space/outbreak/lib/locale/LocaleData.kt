@@ -10,13 +10,18 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
 import net.kyori.adventure.translation.GlobalTranslator
 import net.kyori.adventure.translation.Translator
+import space.outbreak.lib.locale.source.ILocaleSource
+import space.outbreak.lib.locale.source.ITranslationsSource
 import java.util.*
 
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class LocaleData(
-    private val namespaceKey: Key
+    private val namespaceKey: Key,
+    serverName: String
 ) {
+    var serverName = serverName
+
     // Все возможные нэймспэйсы, имеющиеся в compiledTree для быстрого доступа
     private val _namespaces = mutableSetOf<String>()
     private val compiledTree: MutableMap<Locale, MutableMap<Key, String>> = mutableMapOf()
@@ -24,6 +29,16 @@ open class LocaleData(
 
     lateinit var serializer: MiniMessage
     lateinit var translator: Translator
+
+    private val sources = mutableListOf<ILocaleSource>()
+
+    fun addSource(source: ILocaleSource) {
+        sources.add(source)
+    }
+
+    fun removeSource(source: ILocaleSource) {
+        sources.remove(source)
+    }
 
     init {
         recalculateSerializer()
@@ -69,30 +84,7 @@ open class LocaleData(
         return compiledTree[lang]?.get(key)
     }
 
-//    fun rawOrNull(lang: Locale, key: Key, vararg replacing: LocalePairBase<*>): String? {
-//        val str = rawOrNull(lang, key) ?: return null
-//        val valueMap = replacing.associate { (k, v) ->
-//            k to if (v is Component) {
-//                serializer.serialize(v)
-//            } else {
-//                v.toString()
-//            }
-//        }
-//        val ss = StringSubstitutor(valueMap, "<", ">", '\\')
-//        return ss.replace(str)
-//    }
-
     companion object {
-//        private fun processArgs(vararg replacing: LocalePairBase<*>): Array<ComponentLike> {
-//            return Array(replacing.size) { i ->
-//                when (val el = replacing[i]) {
-//                    is LocalePairBase.component -> Argument.component(el.key, el.value)
-//                    is LocalePairBase.string -> Argument.string(el.key, el.value)
-//                    is LocalePairBase.il -> Argument.component(el.key, el.value.comp())
-//                }
-//            }
-//        }
-
         private fun replacingToPlaceholders(vararg replacing: LocalePairBase<*>): List<TagResolver.Single> {
             return replacing.map { (key, value) ->
                 when (val v = value) {
@@ -170,20 +162,21 @@ open class LocaleData(
         return out
     }
 
-    /**
-     * Добавляет данные из [config] в языковой словарь
-     *
-     * @param namespace пространство имён для объектов [Key]
-     * @param config карта вида {ключ: перевод}. Ключи ожидаются в виде объектов [Key], у которых
-     *  в качестве значения - пути в yaml-стиле.
-     * */
-    fun load(lang: Locale, namespace: String, config: Map<String, Any?>) {
-        val translations = compileMap(namespace, config)
+    /** Загружает из добавленных источников все переводы и прочее,
+     * предварительно очищая уже загруженные ранее данные. */
+    fun load() {
+        clearData()
 
-        for ((k, _) in translations)
-            _namespaces.add(k.namespace())
-
-        compiledTree.getOrPut(lang) { mutableMapOf() }.putAll(translations)
+        for (source in sources) {
+            if (source is ITranslationsSource) {
+                val translations = source.getAllTranslations(serverName = serverName)
+                for ((locale, map) in translations) {
+                    compiledTree.getOrPut(locale) { mutableMapOf() }.putAll(map)
+                    for ((key, _) in map)
+                        _namespaces.add(key.namespace())
+                }
+            }
+        }
     }
 
     init {
@@ -218,10 +211,15 @@ open class LocaleData(
         }
 
     /** Удаляет все загруженные словари, плейсхолдеры и прочие данные */
-    fun clear() {
+    fun clearData() {
         compiledTree.clear()
         customColorTags.clear()
         _namespaces.clear()
+    }
+
+    /** Заставляет забыть все подключенные источники данных */
+    fun clearSources() {
+        sources.clear()
     }
 
     fun getCustomColorTags(): Map<String, String> {

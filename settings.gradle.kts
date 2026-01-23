@@ -10,11 +10,14 @@ plugins {
 }
 rootProject.name = "OutbreakLib"
 include("utils")
-include("utils-db")
-include("utils-paper")
+include("utils:db")
+include("utils:paper")
+include("utils:config")
+
 include("locale:locale")
 include("locale:db")
 include("locale:paper")
+
 include("api")
 include("OutbreakLibPlugin")
 include("resapi")

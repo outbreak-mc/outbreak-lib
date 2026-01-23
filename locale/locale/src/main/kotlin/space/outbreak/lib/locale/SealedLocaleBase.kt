@@ -1,10 +1,6 @@
 package space.outbreak.lib.locale
 
 import net.kyori.adventure.key.Key
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TranslatableComponent
-import space.outbreak.lib.locale.IL.Companion.replacingToArguments
-import java.util.*
 import kotlin.reflect.KProperty
 
 abstract class SealedLocaleBase(
@@ -32,42 +28,7 @@ abstract class SealedLocaleBase(
             }.toTypedArray()
     }
 
-
-    private fun replacingWithAdditions(vararg addition: LocalePairBase<*>): Array<LocalePairBase<*>> {
-        return replacing + addition
+    override fun preprocessReplacing(vararg replacing: LPB): Array<out LPB> {
+        return this.replacing + replacing
     }
-
-    override fun comp(lang: Locale, vararg replacing: LPB): Component {
-        return super.comp(lang, *replacingWithAdditions(*replacing))
-    }
-
-    fun comp(vararg replacing: LPB): Component {
-        return super.comp(data.defaultLang, *replacingWithAdditions(*replacing))
-    }
-
-    override fun tcomp(vararg replacing: LPB): TranslatableComponent {
-        // Опасная ловушка: если сделать как сделано в других переопределниях, в кэш попадут
-        // дубликаты поверх встроенных реплейсингов, которые будут ломать парсинг
-//        val id = MsgCache.addToTmp(langKey, this)
-        return Component.translatable(
-            langKey.asString(),
-            replacingToArguments(getLocaleData(), *replacingWithAdditions(*replacing))
-        )
-    }
-
-    override fun raw(lang: Locale, vararg replacing: LocalePairBase<*>): String {
-        return super.raw(lang, *replacingWithAdditions(*replacing))
-    }
-
-    override fun raw(vararg replacing: LocalePairBase<*>): String {
-        return super.raw(*replacingWithAdditions(*replacing))
-    }
-
-    override fun rawOrNull(lang: Locale, vararg replacing: LocalePairBase<*>): String? {
-        return super.rawOrNull(lang, *replacingWithAdditions(*replacing))
-    }
-
-//    override fun tcomp(vararg replacing: LPB): TranslatableComponent {
-//        return super.tcomp(*replacingWithAdditions(*replacing))
-//    }
 }

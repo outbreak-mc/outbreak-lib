@@ -1,15 +1,19 @@
 package space.outbreak.lib.paperplugin
 
+import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 import net.kyori.adventure.translation.GlobalTranslator
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import space.outbreak.lib.locale.GlobalLocaleData
-import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.cache.MsgCache
-import space.outbreak.lib.locale.db.LocaleDb
-import space.outbreak.lib.utils.ConfigUtils
+import space.outbreak.lib.locale.db.CURRENT_LOCALE_DB_SCHEMA_VERSION
+import space.outbreak.lib.locale.db.LocaleTableNamesSystem
+import space.outbreak.lib.locale.db.SQLLocaleSource
+import space.outbreak.lib.locale.source.YamlDirectoryLocaleSource
 import space.outbreak.lib.utils.db.connectToDB
+import space.outbreak.lib.utils.resapi.Res
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import kotlin.io.path.absolute
@@ -17,15 +21,25 @@ import kotlin.io.path.name
 import kotlin.time.measureTime
 
 class OutbreakLibPlugin : JavaPlugin() {
-    private val configUtils = ConfigUtils(dataPath, this.javaClass.classLoader)
-    private val command by lazy { LocaleDebugCommand(this, GlobalLocaleData) }
+    val ld = GlobalLocaleData
+    private val command by lazy { LocaleDebugCommand(this, ld) }
     private val localeDbProps = dataFolder.resolve("db.properties")
-    private var loadTime: Long = 0L
+    private val res = Res(this.javaClass.classLoader)
+    private val yamlConfigsLocaleSource = YamlDirectoryLocaleSource(
+        "outbreaklib", dataFolder.resolve("messages").resolve("locales")
+    )
+
+    class LoadStats(
+        val namespaces: Set<String> = setOf(),
+        val keys: Int = -1,
+        val tags: Int = -1,
+        var loadTime: Long = -1L
+    )
+
+    private var loadStats = LoadStats()
 
     private fun prepareFiles() {
-        if (!localeDbProps.exists()) {
-            configUtils.extractAndGetResourceFile("_db.properties")
-        }
+        res.extract("messages", dataFolder)
     }
 
     private var job: CompletableFuture<*>? = null
@@ -38,25 +52,12 @@ class OutbreakLibPlugin : JavaPlugin() {
             nameInConfig
     }
 
-    fun printStats(ld: LocaleData): L.LOADED__STATS {
-        val nss = ld.namespaces
-        var keys = 0
-        var tags = 0
-
-        for (ns in nss) {
-            tags += ld.getCustomColorTags().size
-
-            for (lang in ld.languages) {
-                keys += ld.getKeys(lang).size
-            }
-        }
-
+    fun printStats(): L.LOADED__STATS {
         return L.LOADED__STATS(
-            `load-time` = loadTime,
-            ns = nss,
-            `total-keys` = keys,
-            `total-color-tags` = tags,
-//            `total-placeholders` = placeholders
+            `load-time` = loadStats.loadTime,
+            ns = loadStats.namespaces,
+            `total-keys` = loadStats.keys,
+            `total-color-tags` = loadStats.tags,
         )
     }
 
@@ -67,30 +68,103 @@ class OutbreakLibPlugin : JavaPlugin() {
         }, Executors.newCachedThreadPool())
     }
 
-    fun reload() {
+    fun benchmark(chunksCount: Int = 10, chunksSize: Int = 100, audience: Audience?): L.BENCHMARK {
+        var notCachedTime = 0L
+        var cachedTime = 0L
+
+        val cachedComp = printStats().tcomp()
+        val directComp = printStats().tcomp(ray = -1)
+
+        val locale = Locale.of("en", "US")
+
+        for (c in 0..chunksCount) {
+            if (c % 2 == 0) {
+                notCachedTime += measureTime {
+                    for (i in 0..chunksSize) {
+                        if (audience == null) {
+                            GlobalTranslator.render(directComp, locale)
+                        } else {
+                            audience.sendMessage(directComp)
+                        }
+                    }
+                }.inWholeMicroseconds
+            } else {
+                cachedTime += measureTime {
+                    for (i in 0..chunksSize) {
+                        if (audience == null) {
+                            GlobalTranslator.render(cachedComp, locale)
+                        } else {
+                            audience.sendMessage(cachedComp)
+                        }
+                    }
+                }.inWholeMicroseconds
+            }
+        }
+
+        return L.BENCHMARK(
+            messages = chunksCount * chunksSize,
+            `cached-time` = cachedTime / 1000L,
+            `direct-time` = notCachedTime / 1000L,
+            `batch-size` = chunksSize,
+            batches = chunksCount
+        )
+    }
+
+    fun reload(): LoadStats {
         prepareFiles()
         MsgCache.clear()
+        val server = getServerName()
 
-        loadTime = measureTime {
-            configUtils.loadLocalesFolder("outbreaklib", GlobalLocaleData)
+        ld.serverName = server
+
+        val loadTime = measureTime {
+            ld.clearSources()
+            ld.clearData()
+            ld.addSource(yamlConfigsLocaleSource)
 
             if (localeDbProps.exists()) {
-                val localeDb = LocaleDb(connectToDB(localeDbProps))
-                localeDb.initDatabaseTables()
-                localeDb.loadAllFromDB(server = getServerName())
-
+                val sqlSource = SQLLocaleSource(
+                    server = server,
+                    namespaces = listOf("*"),
+                    db = connectToDB(localeDbProps),
+                    tables = LocaleTableNamesSystem("outbreaklib"),
+                    logger = slF4JLogger
+                )
+                sqlSource.checkAndInitDatabaseTables(
+                    CURRENT_LOCALE_DB_SCHEMA_VERSION,
+                    config.getBoolean("debug.migrate-if-unstable")
+                )
+                ld.addSource(sqlSource)
+                ld.load()
             } else {
-                configUtils.extractAndGetResourceFile("_db.properties")
-                logger.severe("Locale database not loaded! Configure \"_db.properties\" correctly and rename it to \"db.properties\"")
+                res.extract("_db.properties", dataFolder)
+                logger.severe("Unable to load locale from database! Configure \"_db.properties\" correctly and rename it to \"db.properties\"")
             }
         }.inWholeMilliseconds
+
+        var keys = 0
+        for (lang in ld.languages)
+            keys += ld.getKeys(lang).size
+
+        val stats = LoadStats(
+            namespaces = ld.namespaces,
+            tags = ld.getCustomColorTags().size,
+            keys = keys,
+            loadTime = loadTime
+        )
+        loadStats = stats
+        return stats
     }
 
     override fun onEnable() {
         val lastedTime = measureTime {
             job?.join()
         }.inWholeMilliseconds
-        if (lastedTime < loadTime) {
+
+        if (loadStats.loadTime < 0)
+            throw IllegalStateException("Load time is ${loadStats.loadTime} < 0. Something's wrong with the locales loading process.")
+
+        if (lastedTime < loadStats.loadTime) {
             val msg = (if (lastedTime == 0L)
                 "<#ffb3e2>DB completely loaded in background and did not take any start time!</#ffb3e2> <yellow>✨"
             else
@@ -99,13 +173,13 @@ class OutbreakLibPlugin : JavaPlugin() {
             componentLogger.info(miniMessage().deserialize(msg))
         }
 
-        printStats(GlobalLocaleData).send(Bukkit.getConsoleSender())
+        printStats().send(Bukkit.getConsoleSender())
         command.register()
     }
 
     override fun onDisable() {
         command.unregister()
         job?.cancel(true)
-        GlobalTranslator.translator().removeSource(GlobalLocaleData.translator)
+        GlobalTranslator.translator().removeSource(ld.translator)
     }
 }

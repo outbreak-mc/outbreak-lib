@@ -1,6 +1,13 @@
 loaded:
   ns-format: "<green><namespace></green>"
+  ns-sep: ", "
   stats: |-
     Locales loaded in <yellow><load-time></yellow> ms
     Namespaces (<yellow><total-namespaces></yellow>): <namespaces>
     Total: <yellow><total-keys></yellow> keys | <gray>\<placeholders not supported></gray> | <yellow><total-color-tags></yellow> color tags
+benchmark: |-
+  <gray> ----- <white>OutbreakLib locale benchmark</white> -----</gray>
+  <gray> Rendering <yellow><batch-size></yellow> * <yellow><batches></yellow> (<yellow><messages></yellow>) messages</gray>
+  <gray> --- <white>Timings:</white></gray>
+  <gray> Cached: <yellow><cached-time></yellow><white>ms</white></gray>
+  <gray> Direct: <yellow><direct-time></yellow><white>ms</white></gray>

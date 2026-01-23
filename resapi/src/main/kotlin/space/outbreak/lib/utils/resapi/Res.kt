@@ -1,5 +1,10 @@
 package space.outbreak.lib.utils.resapi
 
+import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.LoaderOptions
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
+import org.yaml.snakeyaml.representer.Representer
 import java.io.*
 import java.net.URL
 import java.nio.file.*
@@ -45,8 +50,25 @@ class Res(private val cl: ClassLoader) {
         return getResourceAsPath(path) != null
     }
 
+    /**
+     * Находит в ресурсах файл [resourcePath], распаковывает его
+     * в папку плагина, читает его как yaml и парсит в объект типа [type].
+     * Если файла в ресурсах нет, возвращает null.
+     * */
+    fun <T> readConfig(dataFolder: File, resourcePath: String, type: Class<T>): T? {
+        val outPath = dataFolder.resolve(resourcePath)
+        extract(resourcePath, outPath)
+        val yamlRepr = Representer(DumperOptions()).apply {
+            propertyUtils.isSkipMissingProperties = true
+        }
+        return Yaml(
+            CustomClassLoaderConstructor(type.classLoader, LoaderOptions()),
+            yamlRepr
+        ).loadAs(outPath.inputStream(), type)
+    }
+
     /** Извлекает все ресурсы jar по пути [path] в папку [dst] */
-    fun extract(path: String, dst: File, replace: Boolean) {
+    fun extract(path: String, dst: File, replace: Boolean = false) {
         val resPath = getResourceAsPath(path) ?: throw FileNotFoundException(path)
         if (!resPath.isDirectory()) {
             saveResource(path, dst, replace)
@@ -96,12 +118,12 @@ class Res(private val cl: ClassLoader) {
         }
     }
 
-    fun saveResourceEmbeddingPath(resourcePath: String, dst: File, replace: Boolean) {
+    private fun saveResourceEmbeddingPath(resourcePath: String, dst: File, replace: Boolean) {
         val fineResourcePath = resourcePath
             .replace('\\', '/')
             .trimStart('/')
 
-        require(fineResourcePath != "") { "ResourcePath cannot be null or empty" }
+        require(fineResourcePath != "") { "resourcePath cannot be null or empty" }
 
         val `in` = resourceAsStream(fineResourcePath)
             ?: throw IllegalArgumentException("The embedded resource '$fineResourcePath' cannot be found")

@@ -7,6 +7,7 @@ import dev.jorel.commandapi.kotlindsl.*
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import space.outbreak.lib.locale.GlobalLocaleData
 import space.outbreak.lib.locale.LocaleData
 import space.outbreak.lib.locale.ofExactLocale
@@ -22,7 +23,6 @@ class LocaleDebugCommand(
 
     private val langArg = StringArgument("lang")
         .replaceSuggestions(ArgumentSuggestions.stringCollection { info ->
-//            val ns = info.previousArgs["namespace"] as String
             GlobalLocaleData.languages.map { it.toString() }
         })
 
@@ -35,23 +35,48 @@ class LocaleDebugCommand(
 
     fun register() {
         commandTree("outbreaklib") {
+            withPermission(P.OUTBREAKLIB_USE)
+
             literalArgument("locale") {
+                withPermission(P.LOCALE_RELOAD)
                 literalArgument("stats") {
-                    playerExecutor { player, _ -> plugin.printStats(ld).send(player) }
-                    consoleExecutor { _, _ -> plugin.printStats(ld).let { plugin.componentLogger.info(it.comp()) } }
+                    playerExecutor { player, _ -> plugin.printStats().send(player) }
+                    consoleExecutor { _, _ -> plugin.printStats().let { plugin.componentLogger.info(it.tcomp()) } }
                 }
+
                 literalArgument("reload") {
-                    anyExecutor { sender, _ ->
-                        playerExecutor { player, _ ->
-                            plugin.reload()
-                            Bukkit.broadcast(plugin.printStats(ld).tcomp())
-                        }
-                        consoleExecutor { _, _ ->
-                            plugin.reload()
-                            plugin.printStats(ld).let { plugin.componentLogger.info(it.comp()) }
+                    anyExecutor { executor, _ ->
+                        plugin.reload()
+                        val stats = plugin.printStats()
+                        if (executor is Player)
+                            stats.send(executor)
+                        plugin.componentLogger.info(stats.tcomp())
+                    }
+                }
+
+                literalArgument("benchmark") {
+                    integerArgument("chunksSize", 10, optional = true) {
+                        integerArgument("chunksCount", 1, optional = true) {
+                            booleanArgument("sendMessages", optional = true) {
+                                anyExecutor { sender, args ->
+                                    val chunksSize: Int? by args
+                                    val chunksCount: Int? by args
+                                    val sendMessages: Boolean? by args
+                                    plugin.benchmark(
+                                        chunksCount = chunksCount ?: 10,
+                                        chunksSize = chunksSize ?: 10,
+                                        audience = if (sendMessages ?: false) sender else null
+                                    ).also { msg ->
+                                        if (sender is Player)
+                                            Bukkit.getConsoleSender().sendMessage(msg.tcomp())
+                                        sender.sendMessage(msg.tcomp())
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+
                 literalArgument("checkkey") {
                     argument(namespaceArgument) {
                         argument(langArg) {

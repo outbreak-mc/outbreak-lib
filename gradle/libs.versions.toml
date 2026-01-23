@@ -13,6 +13,8 @@ exposed = "0.61.0"
 hikaricp = "6.2.1"
 junit = "5.11.1"
 h2 = "2.3.232"
+caffeine = "3.2.3"
+semver = "6.0.0"
 
 [libraries]
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -26,11 +28,14 @@ apache-commons-text = { module = "org.apache.commons:commons-text", version.ref 
 commandapi-core = { module = "dev.jorel:commandapi-paper-core", version.ref = "commandapi" }
 commandapi-kotlin = { module = "dev.jorel:commandapi-kotlin-paper", version.ref = "commandapi" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+semver = { module = "org.semver4j:semver4j", version.ref = "semver" }
 
 jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 jetbrains-exposed-migration = { module = "org.jetbrains.exposed:exposed-migration", version.ref = "exposed" }
 jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+
 
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 

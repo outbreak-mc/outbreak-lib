@@ -10,21 +10,5 @@ dependencies {
     compileOnly(rootProject.libs.adventure.text.minimessage)
     compileOnly(rootProject.libs.adventure.text.logger)
     compileOnly(rootProject.libs.apache.commons.text)
+    implementation(rootProject.libs.semver)
 }
-
-// tasks.jar {
-//     from(project(":locale").sourceSets.main.get().output)
-//     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-// }
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = rootProject.group.toString()
-            artifactId = "utils"
-            version = rootProject.version.toString()
-            from(components["java"])
-        }
-    }
-}
-

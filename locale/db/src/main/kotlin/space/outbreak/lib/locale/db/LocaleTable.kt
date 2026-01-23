@@ -2,12 +2,12 @@ package space.outbreak.lib.locale.db
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 
-internal class LocaleTable(name: String = "locale") : IntIdTable(name) {
+class LocaleTable(name: String = "locale") : IntIdTable(name) {
     /** Название плагина, которому принадлежит перевод */
-    val namespace = varchar("namespace", 128).nullable().index()
+    val namespace = varchar("namespace", 64).index()
 
     /** Название сервера, которому принадлежит перевод */
-    val server = varchar("server", 128).nullable().index()
+    val server = varchar("server", 64).nullable().index()
 
     /** Название языка */
     val lang = varchar("lang", 5).index()
