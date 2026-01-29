@@ -5,11 +5,11 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
-import space.outbreak.lib.locale.db.DEFAULT_TABLE_NAMES
-import space.outbreak.lib.locale.db.initDatabaseTables
-import space.outbreak.lib.locale.db.loadAllFromDB
-import space.outbreak.lib.locale.means
 import space.outbreak.lib.utils.locale.LocaleDataManagerBase
+import space.outbreak.lib.v2.locale.db.DEFAULT_TABLE_NAMES
+import space.outbreak.lib.v2.locale.db.initDatabaseTables
+import space.outbreak.lib.v2.locale.db.loadAllFromDB
+import space.outbreak.lib.v2.locale.means
 import kotlin.time.measureTime
 
 class DbModuleTests {

@@ -6,7 +6,6 @@ group = "${rootProject.group}.locale"
 version = rootProject.version
 
 dependencies {
-    implementation(project(":api"))
     compileOnly(rootProject.libs.apache.commons.text)
     compileOnly(rootProject.libs.adventure.api)
     compileOnly(rootProject.libs.adventure.text.minimessage)

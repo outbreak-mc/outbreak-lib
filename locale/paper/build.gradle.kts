@@ -9,7 +9,7 @@ version = rootProject.version
 dependencies {
     compileOnly(rootProject.libs.paper)
     compileOnly(rootProject.libs.commandapi.core)
-    implementation(project(":locale:locale"))
+    api(project(":locale:locale"))
 }
 
 // tasks.jar {

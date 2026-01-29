@@ -1,6 +1,6 @@
 import net.kyori.adventure.key.Key
-import space.outbreak.lib.locale.IL
-import space.outbreak.lib.locale.LocaleData
+import space.outbreak.lib.v2.locale.IL
+import space.outbreak.lib.v2.locale.LocaleData
 
 
 enum class L : IL {

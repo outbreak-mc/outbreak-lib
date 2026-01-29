@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.paperweight.userdev)
 }
 
-group = "space.outbreak.lib.paperplugin"
+group = "${rootProject.group}.paperplugin"
 version = rootProject.version
 
 paper {
@@ -17,8 +17,8 @@ paper {
     author = "OUTBREAK"
     load = BukkitPluginDescription.PluginLoadOrder.STARTUP
 
-    main = "space.outbreak.lib.paperplugin.OutbreakLibPlugin"
-    loader = "space.outbreak.lib.utils.paper.Loader"
+    main = "${rootProject.group}.paperplugin.OutbreakLibPlugin"
+    loader = "${rootProject.group}.utils.paper.Loader"
 
     hasOpenClassloader = false
 
@@ -38,7 +38,7 @@ paper {
 dependencies {
     paperLibrary(kotlin("stdlib"))
     paperLibrary(kotlin("reflect"))
-    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle(rootProject.libs.versions.paper.get())
 
     implementation(project(":utils"))
     implementation(project(":utils:db"))
@@ -48,7 +48,6 @@ dependencies {
     implementation(project(":locale:locale"))
     implementation(project(":locale:db"))
     implementation(project(":locale:paper"))
-    implementation(project(":api"))
 
     implementation(rootProject.libs.jetbrains.exposed.core)
     implementation(rootProject.libs.jetbrains.exposed.migration)

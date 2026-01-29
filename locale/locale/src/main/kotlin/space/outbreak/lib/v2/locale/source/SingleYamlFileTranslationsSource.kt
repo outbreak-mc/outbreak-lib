@@ -1,0 +1,34 @@
+package space.outbreak.lib.v2.locale.source
+
+import net.kyori.adventure.key.Key
+import org.yaml.snakeyaml.Yaml
+import space.outbreak.lib.v2.locale.GlobalLocaleData.toYamlStyleKey
+import java.io.File
+import java.util.*
+
+class SingleYamlFileTranslationsSource(
+    private val lang: Locale,
+    private val namespace: String,
+    private val file: File
+) : ITranslationsSource {
+    private fun compileMap(namespace: String, map: Map<String, Any?>): MutableMap<Key, String> {
+        val out = mutableMapOf<Key, String>()
+        map.forEach { (rawK, v) ->
+            val k = rawK.toYamlStyleKey()
+            if (v !is Map<*, *>) {
+                out[Key.key(namespace, k)] = v.toString()
+            } else {
+                @Suppress("UNCHECKED_CAST")
+                compileMap(namespace, v as Map<String, Any>).forEach { (innerK, innerV) ->
+                    out[Key.key(namespace, k + "." + innerK.value())] = innerV
+                }
+            }
+        }
+        return out
+    }
+
+    override fun getAllTranslations(serverName: String): Map<Locale, Map<Key, String>> {
+        val map: Map<String, Any> = Yaml().load(file.inputStream())
+        return mapOf(lang to compileMap(namespace, map))
+    }
+}

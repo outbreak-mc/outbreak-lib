@@ -18,6 +18,5 @@ include("locale:locale")
 include("locale:db")
 include("locale:paper")
 
-include("api")
 include("OutbreakLibPlugin")
 include("resapi")
