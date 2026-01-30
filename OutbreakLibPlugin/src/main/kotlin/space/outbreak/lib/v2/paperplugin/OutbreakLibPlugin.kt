@@ -7,12 +7,14 @@ import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import space.outbreak.lib.v2.locale.GlobalLocaleData
 import space.outbreak.lib.v2.locale.cache.MsgCache
-import space.outbreak.lib.v2.locale.db.CURRENT_LOCALE_DB_SCHEMA_VERSION
 import space.outbreak.lib.v2.locale.db.LocaleTableNamesSystem
 import space.outbreak.lib.v2.locale.db.SQLLocaleSource
-import space.outbreak.lib.v2.locale.source.YamlDirectoryLocaleSource
+import space.outbreak.lib.v2.locale.ofExactLocale
+import space.outbreak.lib.v2.locale.source.ILocaleSource
+import space.outbreak.lib.v2.locale.source.yaml.SingleYamlFileTranslationsSource
 import space.outbreak.lib.v2.utils.db.connectToDB
 import space.outbreak.lib.v2.utils.resapi.Res
+import java.io.File
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -23,11 +25,7 @@ import kotlin.time.measureTime
 class OutbreakLibPlugin : JavaPlugin() {
     val ld = GlobalLocaleData
     private val command by lazy { LocaleDebugCommand(this, ld) }
-    private val localeDbProps = dataFolder.resolve("db.properties")
     private val res = Res(this.javaClass.classLoader)
-    private val yamlConfigsLocaleSource = YamlDirectoryLocaleSource(
-        "outbreaklib", dataFolder.resolve("messages").resolve("locales")
-    )
 
     class LoadStats(
         val namespaces: Set<String> = setOf(),
@@ -59,6 +57,39 @@ class OutbreakLibPlugin : JavaPlugin() {
             `total-keys` = loadStats.keys,
             `total-color-tags` = loadStats.tags,
         )
+    }
+
+    fun loadSourcesFolder(sourcesFolder: File) {
+        fun loadFile(namespace: String, file: File): ILocaleSource? {
+            return when (file.extension) {
+                "properties" -> SQLLocaleSource(
+                    server = getServerName(),
+                    namespaces = listOf("*"),
+                    db = connectToDB(file),
+                    tables = LocaleTableNamesSystem("outbreaklib"),
+                    logger = slF4JLogger,
+                    migrateIfUnstable = config.getBoolean("debug.migrate-if-unstable")
+                )
+
+                "yml", "yaml" -> SingleYamlFileTranslationsSource(
+                    ofExactLocale(file.nameWithoutExtension), namespace, file
+                )
+
+                else -> null
+            }
+        }
+
+        fun loadDir(dir: File) {
+            dir.listFiles().forEach { loadFile(dir.name, it)?.let(ld::addSource) }
+        }
+
+        sourcesFolder.listFiles().forEach { entry ->
+            if (entry.isDirectory) {
+                loadDir(entry)
+            } else {
+                loadFile("__global__", entry)
+            }
+        }
     }
 
     override fun onLoad() {
@@ -120,26 +151,9 @@ class OutbreakLibPlugin : JavaPlugin() {
         val loadTime = measureTime {
             ld.clearSources()
             ld.clearData()
-            ld.addSource(yamlConfigsLocaleSource)
 
-            if (localeDbProps.exists()) {
-                val sqlSource = SQLLocaleSource(
-                    server = server,
-                    namespaces = listOf("*"),
-                    db = connectToDB(localeDbProps),
-                    tables = LocaleTableNamesSystem("outbreaklib"),
-                    logger = slF4JLogger
-                )
-                sqlSource.checkAndInitDatabaseTables(
-                    CURRENT_LOCALE_DB_SCHEMA_VERSION,
-                    config.getBoolean("debug.migrate-if-unstable")
-                )
-                ld.addSource(sqlSource)
-                ld.load()
-            } else {
-                res.extract("_db.properties", dataFolder)
-                logger.severe("Unable to load locale from database! Configure \"_db.properties\" correctly and rename it to \"db.properties\"")
-            }
+            loadSourcesFolder(dataFolder.resolve("sources"))
+            ld.loadAll()
         }.inWholeMilliseconds
 
         var keys = 0
@@ -162,13 +176,16 @@ class OutbreakLibPlugin : JavaPlugin() {
         }.inWholeMilliseconds
 
         if (loadStats.loadTime < 0)
-            throw IllegalStateException("Load time is ${loadStats.loadTime} < 0. Something's wrong with the locales loading process.")
+            throw IllegalStateException(
+                "Load time is ${loadStats.loadTime} < 0. Something's wrong " +
+                        "with the locales loading process."
+            )
 
         if (lastedTime < loadStats.loadTime) {
             val msg = (if (lastedTime == 0L)
-                "<#ffb3e2>DB completely loaded in background and did not take any start time!</#ffb3e2> <yellow>✨"
+                "<#ffb3e2>Yay! Sources completely loaded in background and did not take any start time!</#ffb3e2> <yellow>✨"
             else
-                "<#ffb3e2>Yay! Only waited for db synchronously for <yellow>$lastedTime</yellow> ms!")
+                "<#ffb3e2>Only waited for db synchronously for <yellow>$lastedTime</yellow> ms!")
 
             componentLogger.info(miniMessage().deserialize(msg))
         }

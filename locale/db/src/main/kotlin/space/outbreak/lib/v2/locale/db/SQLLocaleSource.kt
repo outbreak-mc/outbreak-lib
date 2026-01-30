@@ -33,6 +33,7 @@ class SQLLocaleSource(
     private val db: Database,
     private val tables: LocaleTableNamesSystem,
     private val logger: Logger,
+    private val migrateIfUnstable: Boolean
 ) : ITranslationsSource {
     /**
      * Создаёт или обновляет необходимые таблицы в базе данных.
@@ -53,6 +54,13 @@ class SQLLocaleSource(
             ),
             latestVersion,
             migrateIfUnstable = migrateIfUnstable
+        )
+    }
+
+    override fun init() {
+        checkAndInitDatabaseTables(
+            CURRENT_LOCALE_DB_SCHEMA_VERSION,
+            migrateIfUnstable
         )
     }
 

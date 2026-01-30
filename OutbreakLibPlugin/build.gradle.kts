@@ -10,7 +10,7 @@ group = "${rootProject.group}.paperplugin"
 version = rootProject.version
 
 paper {
-    name = rootProject.name
+    name = "OutbreakLibV2"
     version = rootProject.version.toString()
     description = rootProject.description
     website = "https://outbreak.space"
@@ -82,7 +82,7 @@ tasks.shadowJar {
         attributes("Implementation-Version" to rootProject.version)
     }
 
-    archiveFileName.set("${rootProject.name}Plugin-${rootProject.version}.jar")
+    archiveFileName.set("OutbreakLib-${rootProject.version}.jar")
     destinationDirectory.set(file("/home/shiny/OUTBREAK/test_server/plugins/"))
 }
 

@@ -162,21 +162,32 @@ open class LocaleData(
         return out
     }
 
+    private fun loadFromSource(source: ILocaleSource) {
+        if (source is ITranslationsSource) {
+            val translations = source.getAllTranslations(serverName = serverName)
+            for ((locale, map) in translations) {
+                compiledTree.getOrPut(locale) { mutableMapOf() }.putAll(map)
+                for ((key, _) in map)
+                    _namespaces.add(key.namespace())
+            }
+        }
+    }
+
     /** Загружает из добавленных источников все переводы и прочее,
      * предварительно очищая уже загруженные ранее данные. */
-    fun load() {
+    fun loadAll() {
         clearData()
 
         for (source in sources) {
-            if (source is ITranslationsSource) {
-                val translations = source.getAllTranslations(serverName = serverName)
-                for ((locale, map) in translations) {
-                    compiledTree.getOrPut(locale) { mutableMapOf() }.putAll(map)
-                    for ((key, _) in map)
-                        _namespaces.add(key.namespace())
-                }
-            }
+            source.init()
+            loadFromSource(source)
         }
+    }
+
+    /** Добавляет источник и загружает из него данные */
+    fun addAndLoad(source: ILocaleSource) {
+        sources.add(source)
+        loadFromSource(source)
     }
 
     init {
