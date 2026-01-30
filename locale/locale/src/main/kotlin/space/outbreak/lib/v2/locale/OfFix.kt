@@ -2,7 +2,7 @@ package space.outbreak.lib.v2.locale
 
 import java.util.*
 
-/** Парсит строку вида "en_US" правильным способом, без потери регистра, в отличии от [Locale.of] */
+/** Парсит строку вида "en_US" правильным способом, без потери регистра (в отличие от [Locale.of]) */
 fun ofExactLocale(str: String): Locale {
     if (str.length == 5) {
         val spl = str.split('_', limit = 2)
