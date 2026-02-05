@@ -1,14 +1,15 @@
 package space.outbreak.lib.v2.locale
 
 import net.kyori.adventure.key.Key
+import java.util.function.Supplier
 import kotlin.reflect.KProperty
 
 abstract class SealedLocaleBase(
-    private val dataGetter: () -> LocaleData,
+    private val dataGetter: Supplier<LocaleData>,
     private val namespace: String,
     private vararg val offsetNodes: String
 ) : IL {
-    private val data get() = dataGetter()
+    private val data get() = dataGetter.get()
 
     override val langKey: Key by lazy {
         val value = if (offsetNodes.isEmpty())

@@ -19,25 +19,38 @@ interface IL {
         fun replacingToPlaceholders(
             lang: Locale,
             vararg replacing: LPB
-        ): List<TagResolver.Single> {
-            return replacing.map { (key, value) ->
-                when (value) {
-                    is IL -> Placeholder.component(key, value.comp(lang))
-                    is ComponentLike -> Placeholder.component(key, value)
-                    else -> Placeholder.parsed(key, value.toString())
-                }
+        ): java.util.ArrayList<TagResolver.Single> {
+            val list = java.util.ArrayList<TagResolver.Single>()
+            replacing.forEach { (key, value) ->
+                list.add(
+                    when (value) {
+                        is IL -> Placeholder.component(key, value.comp(lang))
+                        is ComponentLike -> Placeholder.component(key, value)
+                        else -> Placeholder.parsed(key, value.toString())
+                    }
+                )
             }
+
+            return list
         }
 
-        fun replacingToArguments(localeData: LocaleData, vararg replacing: LPB, ray: Long): List<ComponentLike> {
-            return replacing.map { (key, value) ->
-                when (value) {
-                    is IL -> Argument.component(key, value.tcomp(ray = MsgCache.newId())) // FIXME: эксперимент
-                    is ComponentLike -> Argument.component(key, value)
-                    else -> Argument.component(key, localeData.serializer.deserialize(value.toString()))
+        fun replacingToArguments(
+            localeData: LocaleData,
+            vararg replacing: LPB,
+            ray: Long
+        ): java.util.ArrayList<ComponentLike> {
+            val list = java.util.ArrayList<ComponentLike>()
+            replacing.forEach { (key, value) ->
+                list.add(
+                    when (value) {
+                        is IL -> Argument.component(key, value.tcomp(ray = MsgCache.newId())) // FIXME: эксперимент
+                        is ComponentLike -> Argument.component(key, value)
+                        else -> Argument.component(key, localeData.serializer.deserialize(value.toString()))
 //                    else -> Argument.string(key, value.toString())
-                }
+                    }
+                )
             }
+            return list
         }
 
 //        fun replacingSanityCheck(key: String, vararg replacing: LPB) {
