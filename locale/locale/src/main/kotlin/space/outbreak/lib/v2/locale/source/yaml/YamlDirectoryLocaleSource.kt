@@ -42,6 +42,11 @@ class YamlDirectoryLocaleSource(
     }
 
     override fun getAllTranslations(serverName: String): Map<Locale, Map<Key, String>> {
+        if (!directory.exists()) {
+            System.err.println("Unable to load locale from source ${this::class.simpleName}: Directory $directory does not exist")
+            return mapOf()
+        }
+
         val yaml = Yaml()
         val result = mutableMapOf<Locale, Map<Key, String>>()
 

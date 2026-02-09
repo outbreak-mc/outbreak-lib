@@ -29,6 +29,11 @@ class SingleYamlFileTranslationsSource(
     }
 
     override fun getAllTranslations(serverName: String): Map<Locale, Map<Key, String>> {
+        if (!file.exists()) {
+            System.err.println("Unable to load locale from source ${this::class.simpleName}: File $file does not exist")
+            return mapOf()
+        }
+
         val map: Map<String, Any> = Yaml().load(file.inputStream())
         return mapOf(lang to compileMap(namespace, map))
     }
