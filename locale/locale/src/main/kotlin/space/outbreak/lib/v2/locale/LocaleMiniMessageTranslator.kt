@@ -17,9 +17,23 @@ internal class LocaleMiniMessageTranslator(
     }
 
     override fun getMiniMessageString(key: String, locale: Locale): String? {
+        val locale = if (locale in data.languages) locale else data.defaultLang
+        
         val spl = key.split(':', limit = 2)
         if (spl[0] !in data.namespaces)
             return null
-        return data.raw(locale, Key.key(spl[0], spl[1]))
+
+        val key = Key.key(spl[0], spl[1])
+        val out = data.rawOrNull(locale, key)
+
+        if (out == null) {
+            for (l in data.languages) {
+                val t = data.rawOrNull(l, key)
+                if (t != null)
+                    return t
+            }
+        }
+
+        return out
     }
 }
