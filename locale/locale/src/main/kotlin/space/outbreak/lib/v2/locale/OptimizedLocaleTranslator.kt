@@ -67,7 +67,7 @@ internal class OptimizedLocaleTranslator(
         val realKey = "$namespace:$key"
 
         return propagationCache.get(rayIdStr.toLong()) {
-            mmTranslator.translate(component.key(realKey), locale)!!
+            mmTranslator.translate(component.key(realKey), locale) ?: Component.text(realKey)
         }
     }
 }
