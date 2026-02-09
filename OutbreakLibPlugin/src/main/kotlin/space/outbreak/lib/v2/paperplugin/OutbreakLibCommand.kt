@@ -7,12 +7,13 @@ import dev.jorel.commandapi.kotlindsl.*
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 import org.bukkit.Bukkit
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import space.outbreak.lib.v2.locale.GlobalLocaleData
 import space.outbreak.lib.v2.locale.LocaleData
 import space.outbreak.lib.v2.locale.ofExactLocale
 
-class LocaleDebugCommand(
+class OutbreakLibCommand(
     private val plugin: OutbreakLibPlugin,
     private val ld: LocaleData
 ) {
@@ -33,16 +34,18 @@ class LocaleDebugCommand(
             GlobalLocaleData.getKeys(ofExactLocale(lang)).map { it.value() }
         })
 
+    private fun stats(sender: CommandSender) {
+        plugin.recalculateStats(null)
+        sender.sendMessage(plugin.printStats().tcomp())
+    }
+
     fun register() {
         commandTree("outbreaklib") {
             withPermission(P.OUTBREAKLIB_USE)
 
             literalArgument("locale") {
                 withPermission(P.LOCALE_RELOAD)
-                literalArgument("stats") {
-                    playerExecutor { player, _ -> plugin.printStats().send(player) }
-                    consoleExecutor { _, _ -> plugin.printStats().let { plugin.componentLogger.info(it.tcomp()) } }
-                }
+                literalArgument("stats") { anyExecutor { sender, _ -> stats(sender) } }
 
                 literalArgument("reload") {
                     anyExecutor { executor, _ ->

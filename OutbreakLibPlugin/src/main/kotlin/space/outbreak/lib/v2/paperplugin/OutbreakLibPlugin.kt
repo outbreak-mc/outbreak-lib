@@ -24,7 +24,7 @@ import kotlin.time.measureTime
 
 class OutbreakLibPlugin : JavaPlugin() {
     val ld = GlobalLocaleData
-    private val command by lazy { LocaleDebugCommand(this, ld) }
+    private val command by lazy { OutbreakLibCommand(this, ld) }
     private val res = Res(this.javaClass.classLoader)
 
     class LoadStats(
@@ -50,8 +50,8 @@ class OutbreakLibPlugin : JavaPlugin() {
             nameInConfig
     }
 
-    fun printStats(): L.LOADED__STATS {
-        return L.LOADED__STATS(
+    fun printStats(): L.LOADED.STATS {
+        return L.LOADED.STATS(
             `load-time` = loadStats.loadTime,
             ns = loadStats.namespaces,
             `total-keys` = loadStats.keys,
@@ -59,7 +59,7 @@ class OutbreakLibPlugin : JavaPlugin() {
         )
     }
 
-    fun loadSourcesFolder(sourcesFolder: File) {
+    internal fun loadSourcesFolder(sourcesFolder: File) {
         fun loadFile(namespace: String, file: File): ILocaleSource? {
             return when (file.extension) {
                 "properties" -> SQLLocaleSource(
@@ -99,7 +99,7 @@ class OutbreakLibPlugin : JavaPlugin() {
         }, Executors.newCachedThreadPool())
     }
 
-    fun benchmark(chunksCount: Int = 10, chunksSize: Int = 100, audience: Audience?): L.BENCHMARK {
+    internal fun benchmark(chunksCount: Int = 10, chunksSize: Int = 100, audience: Audience?): L.BENCHMARK {
         var notCachedTime = 0L
         var cachedTime = 0L
 
@@ -141,21 +141,7 @@ class OutbreakLibPlugin : JavaPlugin() {
         )
     }
 
-    fun reload(): LoadStats {
-        prepareFiles()
-        MsgCache.clear()
-        val server = getServerName()
-
-        ld.serverName = server
-
-        val loadTime = measureTime {
-            ld.clearSources()
-            ld.clearData()
-
-            loadSourcesFolder(dataFolder.resolve("sources"))
-            ld.loadAll()
-        }.inWholeMilliseconds
-
+    internal fun recalculateStats(loadTime: Long?): LoadStats {
         var keys = 0
         for (lang in ld.languages)
             keys += ld.getKeys(lang).size
@@ -164,10 +150,27 @@ class OutbreakLibPlugin : JavaPlugin() {
             namespaces = ld.namespaces,
             tags = ld.getCustomColorTags().size,
             keys = keys,
-            loadTime = loadTime
+            loadTime = loadTime ?: loadStats.loadTime
         )
-        loadStats = stats
+
         return stats
+    }
+
+    internal fun reload(): LoadStats {
+        prepareFiles()
+        MsgCache.clear()
+        val server = getServerName()
+
+        ld.serverName = server
+
+        val loadTime = measureTime {
+            ld.clearData()
+
+            loadSourcesFolder(dataFolder.resolve("sources"))
+            ld.loadAll()
+        }.inWholeMilliseconds
+
+        return recalculateStats(loadTime).also { loadStats = it }
     }
 
     override fun onEnable() {

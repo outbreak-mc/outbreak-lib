@@ -1,38 +1,41 @@
+@file:Suppress("ClassName", "PropertyName", "RemoveRedundantBackticks")
+
 package space.outbreak.lib.v2.paperplugin
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.JoinConfiguration
+import space.outbreak.lib.v2.locale.GlobalLocaleData
 import space.outbreak.lib.v2.locale.SealedLocaleBase
 
-sealed class L : SealedLocaleBase(
-    { _root_ide_package_.space.outbreak.lib.v2.locale.GlobalLocaleData },
-    "outbreaklib"
+sealed class L(offset: Array<String> = arrayOf()) : SealedLocaleBase(
+    { GlobalLocaleData },
+    "outbreaklib",
+    offsetNodes = offset
 ) {
-    class LOADED__NS_FORMAT(val namespace: String) : L()
-    class LOADED__NS_SEP : L()
+    sealed class LOADED : L(arrayOf("loaded")) {
+        class NS_FORMAT(val namespace: String) : LOADED()
+        class NS_SEP : LOADED()
 
-    class LOADED__STATS(
-        val `load-time`: Long,
-        ns: Collection<String>,
-        val `total-keys`: Int,
-//        val `total-placeholders`: Int,
-        val `total-color-tags`: Int,
-    ) : L() {
-        //        val `namespaces` = miniMessage().deserialize(ns.joinToString(", ") { nsFormat.replace("<namespace>", it) })
-        private val _nsComps = ns.map { LOADED__NS_FORMAT(it).tcomp() }
-
-        val `namespaces` = Component.join(
-            JoinConfiguration.separator(LOADED__NS_SEP().tcomp()),
-            _nsComps
+        protected fun joinNamespaces(ns: Iterable<String>) = Component.join(
+            JoinConfiguration.separator(NS_SEP().tcomp()),
+            ns.map { NS_FORMAT(it).tcomp() }
         )
-        val `total-namespaces`: Int = ns.size
-        val `namespaces-size`: Int = ns.size
+
+        class STATS(val `load-time`: Long, ns: Collection<String>, val `total-keys`: Int, val `total-color-tags`: Int) :
+            LOADED() {
+            val `namespaces` = joinNamespaces(ns)
+            val `total-namespaces`: Int = ns.size
+        }
+
+        class LOADED_MORE(val keys: Int, ns: Collection<String>) : LOADED() {
+            val `namespaces` = joinNamespaces(ns)
+        }
     }
 
     class BENCHMARK(
         val `batches`: Int,
         val `batch-size`: Int,
-        val messages: Int,
+        val `messages`: Int,
         val `cached-time`: Long,
         val `direct-time`: Long,
     ) : L()
