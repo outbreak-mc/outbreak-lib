@@ -12,10 +12,14 @@ abstract class SealedLocaleBase(
     private val data get() = dataGetter.get()
 
     override val langKey: Key by lazy {
+        val classNameYamlStyle = this::class.simpleName!!.lowercase()
+            .replace("__", ".")
+            .replace("_", "-")
+
         val value = if (offsetNodes.isEmpty())
-            this::class.simpleName!!.lowercase().replace("__", ".").replace("_", "-")
+            classNameYamlStyle
         else
-            offsetNodes.joinToString(separator = ".") { it.lowercase() } + "." + this::class.simpleName!!
+            offsetNodes.joinToString(separator = ".") { it.lowercase() } + "." + classNameYamlStyle
         Key.key(namespace, value)
     }
 
