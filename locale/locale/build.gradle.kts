@@ -11,13 +11,7 @@ dependencies {
     compileOnly(rootProject.libs.caffeine)
     compileOnly(rootProject.libs.paper)
     compileOnly(rootProject.libs.commandapi.core)
-    implementation(project(":locale"))
 }
-
-// tasks.jar {
-//     from(project(":locale").sourceSets.main.get().output)
-//     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-// }
 
 publishing {
     publications {

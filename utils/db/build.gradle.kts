@@ -11,19 +11,6 @@ dependencies {
     compileOnly(rootProject.libs.hikaricp)
     implementation(rootProject.libs.semver)
     compileOnly(project(":utils"))
-
-//    testImplementation(project(":utils"))
-//    testImplementation(rootProject.libs.h2)
-//    testImplementation(rootProject.libs.jetbrains.exposed.core)
-//    testImplementation(rootProject.libs.jetbrains.exposed.jdbc)
-//    testImplementation(rootProject.libs.jetbrains.exposed.dao)
-//    testImplementation(rootProject.libs.jetbrains.exposed.migration)
-//    testImplementation(rootProject.libs.hikaricp)
-//    testImplementation(rootProject.libs.adventure.api)
-//    testImplementation(rootProject.libs.adventure.text.logger)
-//    testImplementation(rootProject.libs.adventure.text.minimessage)
-//    testImplementation(rootProject.libs.apache.commons.text)
-//    testImplementation(rootProject.libs.adventure.text.serializer.ansi)
 }
 
 // tasks.jar {

@@ -20,7 +20,7 @@ paper {
     main = "${rootProject.group}.paperplugin.OutbreakLibPlugin"
     loader = "${rootProject.group}.utils.paper.Loader"
 
-    hasOpenClassloader = false
+    hasOpenClassloader = true
 
     generateLibrariesJson = true
     foliaSupported = true
@@ -49,10 +49,11 @@ dependencies {
     implementation(project(":locale:db"))
     implementation(project(":locale:paper"))
 
-    implementation(rootProject.libs.jetbrains.exposed.core)
-    implementation(rootProject.libs.jetbrains.exposed.migration)
-    implementation(rootProject.libs.jetbrains.exposed.dao)
-    implementation(rootProject.libs.jetbrains.exposed.jdbc)
+    paperLibrary(rootProject.libs.jetbrains.exposed.core)
+    paperLibrary(rootProject.libs.jetbrains.exposed.migration)
+    paperLibrary(rootProject.libs.jetbrains.exposed.dao)
+    paperLibrary(rootProject.libs.jetbrains.exposed.jdbc)
+
     implementation(rootProject.libs.hikaricp)
     implementation(rootProject.libs.caffeine)
     implementation(rootProject.libs.semver)
@@ -69,13 +70,15 @@ kotlin {
 }
 
 tasks.shadowJar {
-    // relocate("com.fasterxml.jackson", "${rootProject.group}.shaded.com.fasterxml.jackson")
-    relocate("org.jetbrains.exposed", "${rootProject.group}.shaded.exposed")
+//    relocate("org.jetbrains.exposed", "${rootProject.group}.shaded.exposed")
     relocate("com.zaxxer", "${rootProject.group}.shaded.hikaricp")
-    relocate("com.github.ben-manes.caffeine", "${rootProject.group}.shaded.caffeine")
-    relocate("org.semver4j:semver4j", "${rootProject.group}.shaded.semver")
-    exclude("/kotlin/")
-    exclude("/kotlinx/")
+    relocate("com.github.benmanes", "${rootProject.group}.shaded.benmanes")
+    relocate("org.semver4j", "${rootProject.group}.shaded.semver")
+//    exclude("/kotlin/")
+//    exclude("/kotlinx/")
+//    exclude("/com/google/")
+    exclude("/org/slf4j/")
+    exclude("/org/jspecify/")
 
     mergeServiceFiles()
     manifest {

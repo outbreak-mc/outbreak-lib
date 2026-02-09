@@ -8,7 +8,7 @@ tasks.wrapper {
 }
 
 group = "space.outbreak.lib.v2"
-version = "2.0-SNAPSHOT"
+version = "2.0.0-SNAPSHOT"
 
 allprojects {
     apply(plugin = "kotlin")
