@@ -9,9 +9,9 @@ abstract class SealedLocaleBase(
     private val namespace: String,
     private vararg val offsetNodes: String
 ) : IL {
-    private val data get() = dataGetter.get()
+    val data get() = dataGetter.get()
 
-    override val langKey: Key by lazy {
+    override val translationKey: Key by lazy {
         val classNameYamlStyle = this::class.simpleName!!.lowercase()
             .replace("__", ".")
             .replace("_", "-")
@@ -23,10 +23,10 @@ abstract class SealedLocaleBase(
         Key.key(namespace, value)
     }
 
-    private val replacing: Array<LocalePairBase<*>> by lazy {
+    private val replacing: Array<LPB> by lazy {
         this::class.members
             .filterIsInstance<KProperty<*>>()
-            .filter { it.parameters.size == 1 && it.name != "langKey" && !it.name.startsWith("_") }
+            .filter { it.parameters.size == 1 && it.name != (::translationKey.name) && !it.name.startsWith("_") }
             .mapNotNull { field ->
                 val value = field.getter.call(this) ?: return@mapNotNull null
                 field.name means value

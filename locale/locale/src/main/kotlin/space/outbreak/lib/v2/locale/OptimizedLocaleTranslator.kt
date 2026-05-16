@@ -1,5 +1,6 @@
 package space.outbreak.lib.v2.locale
 
+import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
@@ -16,9 +17,7 @@ internal class OptimizedLocaleTranslator(
     miniMessage: MiniMessage
 ) : Translator {
     private val data: LocaleData = localeData
-    private val mmTranslator = LocaleMiniMessageTranslator(
-        translatorName, data, miniMessage
-    )
+    private val mmTranslator = LocaleMiniMessageTranslator(translatorName, data, miniMessage)
 
     override fun name(): Key {
         return translatorName
@@ -28,21 +27,26 @@ internal class OptimizedLocaleTranslator(
         return null
     }
 
-    // Система кэширования для избавления от лишних вызовов парсинга. По умолчанию,
+    data class PropCacheKey(
+        val ray: Long,
+        val locale: Locale
+    )
+
+    // Система кэширования для избавления от лишних вызовов парсинга. По умолчанию
     // каждое сообщение отправляется каждому из игроков с вызовом парсинга каждый раз. Данный
     // кэш призван сохранять перекодированное в компонент после первой отправки сообщение для
-    // отправки остальным получателям.
-    // Ключ (rayId: Long) генерируется в вызове tcomp(), то есть един в рамках одного заготовленного
-    // сообщения, после чего данные кэшируются по мере рассылки.
-    // Если вызвано tcomp(ray = -1), оптимизация не применяется.
-    private val propagationCache = Caffeine.newBuilder()
-        .expireAfterWrite(5, TimeUnit.SECONDS)
-        .build<Long, Component>()
+    // отправки остальным получателям такой же локали.
+    // Ключ состоит из Ray ID (Long), генерируемого вызове tcomp() и Locale, то есть един в
+    // рамках одного заготовленного сообщения для одного языка, после чего данные кэшируются
+    // по мере рассылки.
+    private val propagationCache: Cache<PropCacheKey, Component> = Caffeine.newBuilder()
+        .expireAfterAccess(50, TimeUnit.MILLISECONDS)
+        .build()
 
     override fun canTranslate(key: String, locale: Locale): Boolean {
         // У kyori очень странная и кринжовая система проверки. Если не переопределён метод canTranslate,
         // в его дефолтной реализации буквально вызывается translate() просто чтобы проверить, что
-        // переводчик может такое перевести, а потом... Результат просто выкидывается и translate() потом
+        // переводчик может такое перевести, а потом... Результат просто выкидывается и translate()
         // вызывают ещё раз, уже для финального возврата. Зачем вообще было делать отдельный метод для
         // проверки, если translate() всё равно может возвращать null, так что приходится осуществлять
         // двойную (или точнее x1.5) проверку... Так ещё и эта безумная дефолтная реализация с двойным
@@ -64,10 +68,10 @@ internal class OptimizedLocaleTranslator(
             return mmTranslator.translate(component, locale)
 
         val (rayIdStr, namespace, key) = spl
-        val realKey = "$namespace:$key"
 
-        return propagationCache.get(rayIdStr.toLong()) {
-            mmTranslator.translate(component.key(realKey), locale) ?: Component.text(realKey)
+        return propagationCache.get(PropCacheKey(rayIdStr.toLong(), locale)) {
+            mmTranslator.translate(component.key("$namespace:$key"), locale)
+                ?: Component.text("$namespace:$key")
         }
     }
 }

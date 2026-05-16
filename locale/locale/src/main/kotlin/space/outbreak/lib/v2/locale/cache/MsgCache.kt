@@ -22,7 +22,7 @@ object MsgCache {
     // Кэш для сообщений, которые не имеют аргументов и парсить их каждый раз - бесполезно.
     private val staticCache = mutableMapOf<StaticCacheKey, Component>()
 
-    fun newId(): Long {
+    fun newRay(): Long {
         return counter.incrementAndGet()
     }
 

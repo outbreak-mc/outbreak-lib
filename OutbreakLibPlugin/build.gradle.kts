@@ -54,7 +54,7 @@ dependencies {
     paperLibrary(rootProject.libs.jetbrains.exposed.dao)
     paperLibrary(rootProject.libs.jetbrains.exposed.jdbc)
 
-    implementation(rootProject.libs.hikaricp)
+    paperLibrary(rootProject.libs.hikaricp)
     implementation(rootProject.libs.caffeine)
     implementation(rootProject.libs.semver)
 
@@ -70,13 +70,9 @@ kotlin {
 }
 
 tasks.shadowJar {
-//    relocate("org.jetbrains.exposed", "${rootProject.group}.shaded.exposed")
-    relocate("com.zaxxer", "${rootProject.group}.shaded.hikaricp")
     relocate("com.github.benmanes", "${rootProject.group}.shaded.benmanes")
     relocate("org.semver4j", "${rootProject.group}.shaded.semver")
-//    exclude("/kotlin/")
-//    exclude("/kotlinx/")
-//    exclude("/com/google/")
+
     exclude("/org/slf4j/")
     exclude("/org/jspecify/")
 
@@ -86,7 +82,7 @@ tasks.shadowJar {
     }
 
     archiveFileName.set("OutbreakLib-${rootProject.version}.jar")
-    destinationDirectory.set(file("/home/shiny/OUTBREAK/test_server/plugins/"))
+    // destinationDirectory.set(file("~/OUTBREAK/test_server/plugins/"))
 }
 
 tasks.assemble {

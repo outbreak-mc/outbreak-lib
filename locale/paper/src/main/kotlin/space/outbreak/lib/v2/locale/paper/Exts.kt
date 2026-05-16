@@ -5,10 +5,10 @@ import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 import org.bukkit.inventory.meta.ItemMeta
 import space.outbreak.lib.v2.locale.IL
-import space.outbreak.lib.v2.locale.LocalePairBase
+import space.outbreak.lib.v2.locale.LPB
 import space.outbreak.lib.v2.locale.SealedLocaleBase
 
-fun IL.cmdFail(vararg placeholders: LocalePairBase<*>): Nothing {
+fun IL.cmdFail(vararg placeholders: LPB): Nothing {
     throw CommandAPIPaper.failWithAdventureComponent(this.tcomp(*placeholders))
 }
 

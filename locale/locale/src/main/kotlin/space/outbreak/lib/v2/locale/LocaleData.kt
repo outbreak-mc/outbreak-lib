@@ -1,11 +1,10 @@
 package space.outbreak.lib.v2.locale
 
 import net.kyori.adventure.key.Key
-import net.kyori.adventure.text.ComponentLike
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.Tag
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
 import net.kyori.adventure.translation.GlobalTranslator
@@ -26,6 +25,9 @@ open class LocaleData(
     private val _namespaces = mutableSetOf<String>()
     private val compiledTree: MutableMap<Locale, MutableMap<Key, String>> = mutableMapOf()
     private val customColorTags: MutableMap<String, String> = mutableMapOf()
+
+    private val staticPlaceholdersGlobal: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+    private val staticPlaceholders: MutableMap<String, MutableMap<Locale, MutableMap<String, String>>> = mutableMapOf()
 
     lateinit var serializer: MiniMessage
     lateinit var translator: Translator
@@ -52,48 +54,22 @@ open class LocaleData(
                 _namespaces.add(k.namespace())
     }
 
-    val namespaces: Set<String>
-        get() = _namespaces
+    val namespaces: Set<String> get() = _namespaces
 
     fun addCustomColorTags(tags: Map<String, String>) {
         customColorTags.putAll(tags)
         recalculateSerializer()
     }
 
-    internal fun String.toEnumStyleKey(): String {
-        return uppercase().replace("-", "_").replace(".", "__")
-    }
-
-    internal fun String.toYamlStyleKey(): String {
-        return lowercase().replace("__", ".").replace("_", "-")
-    }
-
-    internal fun String.isEnumStyleKey(): Boolean {
-        return (isNotBlank() && first().isUpperCase()) && contains("__") && !contains(".")
-    }
-
-    fun raw(lang: Locale, key: Key): String {
-        return compiledTree[lang]?.get(key) ?: key.toString()
-    }
-
-    fun raw(key: Key): String {
-        return compiledTree[defaultLang]?.get(key) ?: key.toString()
+    fun process(str: String, vararg replacing: LPB): Component {
+        return serializer.deserialize(str, *replacing)
     }
 
     fun rawOrNull(lang: Locale, key: Key): String? {
         return compiledTree[lang]?.get(key)
     }
 
-    companion object {
-        private fun replacingToPlaceholders(vararg replacing: LocalePairBase<*>): List<TagResolver.Single> {
-            return replacing.map { (key, value) ->
-                when (val v = value) {
-                    is ComponentLike -> Placeholder.component(key, v)
-                    else -> Placeholder.parsed(key, v.toString())
-                }
-            }
-        }
-    }
+    fun raw(lang: Locale, key: Key) = rawOrNull(lang, key) ?: key.toString()
 
     fun getMiniMessage(): MiniMessage {
         return serializer

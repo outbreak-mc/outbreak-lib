@@ -12,27 +12,21 @@ internal class LocaleMiniMessageTranslator(
 ) : MiniMessageTranslator(miniMessage) {
     private val data: LocaleData = localeData
 
-    override fun name(): Key {
-        return key
+    override fun name() = key
+
+    override fun canTranslate(key: String, locale: Locale): Boolean {
+        return key.split(":", limit = 1)[0] in data.namespaces
     }
 
     override fun getMiniMessageString(key: String, locale: Locale): String? {
-        val locale = if (locale in data.languages) locale else data.defaultLang
-
         val spl = key.split(':', limit = 2)
-        if (spl[0] !in data.namespaces)
-            return null
-
         val key = Key.key(spl[0], spl[1])
-        val out = data.rawOrNull(locale, key)
 
-        if (out == null) {
-            for (l in data.languages) {
-                val t = data.rawOrNull(l, key)
-                if (t != null)
-                    return t
-            }
-        }
+        val out = data.rawOrNull(locale, key)
+        if (out != null) return out
+
+        for (l in data.languages)
+            return data.rawOrNull(l, key) ?: continue
 
         return out
     }

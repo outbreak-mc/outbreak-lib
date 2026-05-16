@@ -11,32 +11,39 @@ import org.slf4j.Logger
 import java.io.File
 import java.util.*
 
-/** Подключается к базе данных на основе параметров из `.properties`-файла. */
-fun connectToDB(configFile: File): Database {
+/** Подключается к SQL базе данных любого типа на основе параметров из `.properties`-файла. */
+fun connectToDB(configFile: File): HikariDataSource {
     val props = Properties()
     props.load(configFile.inputStream())
-    return Database.connect(HikariDataSource(HikariConfig(props)))
+    return HikariDataSource(HikariConfig(props))
 }
 
 /** Метод для простого и удобного подключения к SQLite.
  * По умолчанию включает `foreign_keys`. */
-fun connectToSqlite(file: File, extraConfig: ((HikariConfig) -> Unit)? = null): Database {
+fun connectToSqlite(file: File, extraConfig: ((HikariConfig) -> Unit)? = null): HikariDataSource {
     val conf = HikariConfig().apply {
         driverClassName = "org.sqlite.JDBC"
-        jdbcUrl = "jdbc:sqlite:${file}?foreign_keys=on"
         jdbcUrl = "jdbc:sqlite:${file}?foreign_keys=on"
         maximumPoolSize = 5
         isAutoCommit = true
         extraConfig?.invoke(this)
     }
 
-    return Database.connect(HikariDataSource(conf))
+    return HikariDataSource(conf)
 }
 
-/**
- * Создаёт in-memory sqlite базу данных с именем [name] По умолчанию включает `foreign_keys`.
- * */
-fun inMemorySqlite(name: String = "memdb1", extraConfig: ((HikariConfig) -> Unit)? = null): Database {
+/** Создаёт in-memory H2 базу данных с именем [name] и режимом [mode]. */
+fun connectToH2(name: String, mode: String = "MySQL", extraConfig: ((HikariConfig) -> Unit)? = null): HikariDataSource {
+    return HikariDataSource().apply {
+        jdbcUrl = "jdbc:h2:mem:${name};MODE=${mode};DB_CLOSE_DELAY=-1"
+        maximumPoolSize = 10
+        driverClassName = "org.h2.Driver"
+        extraConfig?.invoke(this)
+    }
+}
+
+/** Создаёт in-memory sqlite базу данных с именем [name] По умолчанию включает `foreign_keys`. */
+fun inMemorySqlite(name: String = "memdb1", extraConfig: ((HikariConfig) -> Unit)? = null): HikariDataSource {
     val conf = HikariConfig().apply {
         jdbcUrl = "jdbc:sqlite:file:${name}?mode=memory&cache=shared&foreign_keys=on"
         driverClassName = "org.sqlite.JDBC"
@@ -45,7 +52,7 @@ fun inMemorySqlite(name: String = "memdb1", extraConfig: ((HikariConfig) -> Unit
         extraConfig?.invoke(this)
     }
 
-    return Database.connect(HikariDataSource(conf))
+    return HikariDataSource(conf)
 }
 
 private const val VERSION = "version"

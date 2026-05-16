@@ -2,8 +2,8 @@ package space.outbreak.lib.v2.locale.source.yaml
 
 import net.kyori.adventure.key.Key
 import org.yaml.snakeyaml.Yaml
-import space.outbreak.lib.v2.locale.GlobalLocaleData.toYamlStyleKey
 import space.outbreak.lib.v2.locale.source.ITranslationsSource
+import space.outbreak.lib.v2.locale.toYamlStyleKey
 import java.io.File
 import java.util.*
 

@@ -5,6 +5,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 import net.kyori.adventure.translation.GlobalTranslator
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
+import org.jetbrains.exposed.sql.Database
 import space.outbreak.lib.v2.locale.GlobalLocaleData
 import space.outbreak.lib.v2.locale.cache.MsgCache
 import space.outbreak.lib.v2.locale.db.LocaleTableNamesSystem
@@ -65,7 +66,7 @@ class OutbreakLibPlugin : JavaPlugin() {
                 "properties" -> SQLLocaleSource(
                     server = getServerName(),
                     namespaces = listOf("*"),
-                    db = connectToDB(file),
+                    db = Database.connect(connectToDB(file)),
                     tables = LocaleTableNamesSystem("outbreaklib"),
                     logger = slF4JLogger,
                     migrateIfUnstable = config.getBoolean("debug.migrate-if-unstable")
@@ -104,7 +105,7 @@ class OutbreakLibPlugin : JavaPlugin() {
         var cachedTime = 0L
 
         val cachedComp = printStats().tcomp()
-        val directComp = printStats().tcomp(ray = -1)
+        val directComp = printStats().tcomp()
 
         val locale = Locale.of("en", "US")
 
