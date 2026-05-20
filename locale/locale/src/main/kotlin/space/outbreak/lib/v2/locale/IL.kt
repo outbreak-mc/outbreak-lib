@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.translation.Argument
+import net.kyori.adventure.translation.GlobalTranslator
 import org.apache.commons.text.StringSubstitutor
 import space.outbreak.lib.v2.locale.cache.MsgCache
 import java.util.*
@@ -38,9 +39,14 @@ interface IL {
         val replacing = preprocessReplacing(*replacing)
 
         return if (replacing.isEmpty())
-            MsgCache.getOrPutToStaticCache(translationKey.asString(), lang) { mm.deserialize(raw(lang)) }
+            MsgCache.getOrPutToStaticCache(translationKey.asString(), lang) {
+                GlobalTranslator.render(mm.deserialize(raw(lang)), lang)
+            }
         else {
-            mm.deserialize(getLocaleData().raw(lang, translationKey), *replacing)
+            GlobalTranslator.render(
+                mm.deserialize(getLocaleData().raw(lang, translationKey), *replacing),
+                lang
+            )
         }
     }
 
