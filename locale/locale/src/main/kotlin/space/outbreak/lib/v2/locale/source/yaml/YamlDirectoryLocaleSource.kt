@@ -2,16 +2,17 @@ package space.outbreak.lib.v2.locale.source.yaml
 
 import net.kyori.adventure.key.Key
 import org.yaml.snakeyaml.Yaml
+import space.outbreak.lib.v2.locale.ofExactLocaleOrNull
 import space.outbreak.lib.v2.locale.source.ITranslationsSource
 import space.outbreak.lib.v2.locale.toYamlStyleKey
 import java.io.File
 import java.util.*
 
-class YamlDirectoryLocaleSource(
-    private val namespace: String,
+open class YamlDirectoryLocaleSource(
+    override val key: Key,
     private val directory: File
 ) : ITranslationsSource {
-    private fun compileMap(namespace: String, map: Map<String, Any?>): MutableMap<Key, String> {
+    protected fun compileMap(namespace: String, map: Map<String, Any?>): MutableMap<Key, String> {
         val out = mutableMapOf<Key, String>()
         map.forEach { (rawK, v) ->
             val k = rawK.toYamlStyleKey()
@@ -27,20 +28,6 @@ class YamlDirectoryLocaleSource(
         return out
     }
 
-    private fun getLangByName(name: String): Locale? {
-        val (name, _) = name.split(".", limit = 2)
-        if (name.length != 5)
-            return null
-        val spl = name.split("_")
-        if (spl.size != 2)
-            return null
-        val (lang, country) = spl
-        return Locale.of(
-            lang.lowercase(),
-            country.uppercase()
-        )
-    }
-
     override fun getAllTranslations(serverName: String): Map<Locale, Map<Key, String>> {
         if (!directory.exists()) {
             System.err.println("Unable to load locale from source ${this::class.simpleName}: Directory $directory does not exist")
@@ -51,10 +38,10 @@ class YamlDirectoryLocaleSource(
         val result = mutableMapOf<Locale, Map<Key, String>>()
 
         directory.listFiles { it.name.endsWith(".yml") || it.name.endsWith(".yaml") }
-            .mapNotNull { (getLangByName(it.name) ?: return@mapNotNull null) to it }
+            .mapNotNull { (ofExactLocaleOrNull(it.nameWithoutExtension) ?: return@mapNotNull null) to it }
             .forEach { (lang, f) ->
                 val map: Map<String, Any> = yaml.load(f.inputStream())
-                result[lang] = compileMap(namespace, map)
+                result[lang] = compileMap(key.namespace(), map)
             }
 
         return result

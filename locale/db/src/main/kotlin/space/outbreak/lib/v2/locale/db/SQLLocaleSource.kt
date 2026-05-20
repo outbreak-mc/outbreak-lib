@@ -28,6 +28,7 @@ import java.util.*
  * @param
  * */
 class SQLLocaleSource(
+    override val key: Key,
     private val server: String?,
     private val namespaces: Collection<String>,
     private val db: Database,

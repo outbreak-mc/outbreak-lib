@@ -1,6 +1,7 @@
 package space.outbreak.lib.v2.paperplugin
 
 import net.kyori.adventure.audience.Audience
+import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.minimessage.MiniMessage.miniMessage
 import net.kyori.adventure.translation.GlobalTranslator
 import org.bukkit.Bukkit
@@ -13,6 +14,8 @@ import space.outbreak.lib.v2.locale.db.SQLLocaleSource
 import space.outbreak.lib.v2.locale.ofExactLocale
 import space.outbreak.lib.v2.locale.source.ILocaleSource
 import space.outbreak.lib.v2.locale.source.yaml.SingleYamlFileTranslationsSource
+import space.outbreak.lib.v2.locale.source.yaml.YamlColorTagsSource
+import space.outbreak.lib.v2.locale.source.yaml.YamlDirectoryLocaleSource
 import space.outbreak.lib.v2.utils.db.connectToDB
 import space.outbreak.lib.v2.utils.resapi.Res
 import java.io.File
@@ -60,10 +63,16 @@ class OutbreakLibPlugin : JavaPlugin() {
         )
     }
 
-    internal fun loadSourcesFolder(sourcesFolder: File) {
+    internal fun readSourcesFolder(sourcesFolder: File) {
+        for (s in _sourcesFromFolder)
+            ld.removeSource(s)
+        _sourcesFromFolder.clear()
+
         fun loadFile(namespace: String, file: File): ILocaleSource? {
+            val name = file.nameWithoutExtension
             return when (file.extension) {
                 "properties" -> SQLLocaleSource(
+                    key = Key.key(namespace, name),
                     server = getServerName(),
                     namespaces = listOf("*"),
                     db = Database.connect(connectToDB(file)),
@@ -72,24 +81,48 @@ class OutbreakLibPlugin : JavaPlugin() {
                     migrateIfUnstable = config.getBoolean("debug.migrate-if-unstable")
                 )
 
-                "yml", "yaml" -> SingleYamlFileTranslationsSource(
-                    ofExactLocale(file.nameWithoutExtension), namespace, file
-                )
+                "yml", "yaml" -> {
+                    if (file.nameWithoutExtension == "color-tags") {
+                        YamlColorTagsSource(Key.key(namespace, name), file)
+                    } else {
+                        SingleYamlFileTranslationsSource(
+                            Key.key(namespace, name.lowercase()),
+                            ofExactLocale(file.nameWithoutExtension), file
+                        )
+                    }
+                }
 
                 else -> null
             }
         }
 
-        fun loadDir(dir: File) {
-            dir.listFiles().forEach { loadFile(dir.name, it)?.let(ld::addSource) }
+        fun loadDir(dir: File): List<ILocaleSource> {
+            val namespace = dir.name
+            val out = mutableListOf<ILocaleSource>()
+
+            dir.listFiles().forEach { f ->
+                (if (f.isDirectory) {
+                    YamlDirectoryLocaleSource(Key.key(namespace, f.nameWithoutExtension), f)
+                } else loadFile(namespace, f))
+                    ?.also { source ->
+                        out.add(source)
+                        componentLogger.info("Loading $f as source ${source.key}")
+                    }
+            }
+            return out
         }
 
+        val out = mutableListOf<ILocaleSource>()
         sourcesFolder.listFiles().forEach { entry ->
-            if (entry.isDirectory) {
-                loadDir(entry)
-            } else {
-                loadFile("__global__", entry)
-            }
+            if (entry.isDirectory)
+                out.addAll(loadDir(entry))
+            else
+                loadFile("__global__", entry)?.also(out::add)
+        }
+
+        for (s in out) {
+            _sourcesFromFolder.add(s.key)
+            ld.addSource(s)
         }
     }
 
@@ -149,13 +182,15 @@ class OutbreakLibPlugin : JavaPlugin() {
 
         val stats = LoadStats(
             namespaces = ld.namespaces,
-            tags = ld.getCustomColorTags().size,
+            tags = ld.getColorTags().size,
             keys = keys,
             loadTime = loadTime ?: loadStats.loadTime
         )
 
         return stats
     }
+
+    private val _sourcesFromFolder = mutableListOf<Key>()
 
     internal fun reload(): LoadStats {
         prepareFiles()
@@ -166,8 +201,7 @@ class OutbreakLibPlugin : JavaPlugin() {
 
         val loadTime = measureTime {
             ld.clearData()
-
-            loadSourcesFolder(dataFolder.resolve("sources"))
+            readSourcesFolder(dataFolder.resolve("sources"))
             ld.loadAll()
         }.inWholeMilliseconds
 

@@ -9,6 +9,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
 import net.kyori.adventure.translation.GlobalTranslator
 import net.kyori.adventure.translation.Translator
+import space.outbreak.lib.v2.locale.source.ICustomColorTagsSource
 import space.outbreak.lib.v2.locale.source.ILocaleSource
 import space.outbreak.lib.v2.locale.source.ITranslationsSource
 import java.util.*
@@ -22,24 +23,27 @@ open class LocaleData(
     var serverName = serverName
 
     // Все возможные нэймспэйсы, имеющиеся в compiledTree для быстрого доступа
+    private val _colorTags = mutableMapOf<String, String>()
     private val _namespaces = mutableSetOf<String>()
     private val compiledTree: MutableMap<Locale, MutableMap<Key, String>> = mutableMapOf()
-    private val customColorTags: MutableMap<String, String> = mutableMapOf()
 
-    private val staticPlaceholdersGlobal: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
-    private val staticPlaceholders: MutableMap<String, MutableMap<Locale, MutableMap<String, String>>> = mutableMapOf()
+    // private val staticPlaceholdersGlobal: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+    // private val staticPlaceholders: MutableMap<String, MutableMap<Locale, MutableMap<String, String>>> = mutableMapOf()
 
     lateinit var serializer: MiniMessage
     lateinit var translator: Translator
 
-    private val sources = mutableListOf<ILocaleSource>()
+    private val sources = mutableMapOf<Key, ILocaleSource>()
 
     fun addSource(source: ILocaleSource) {
-        sources.add(source)
+        if (source.key in sources)
+            throw IllegalStateException("Source with key ${source.key} already exists. Sources should be removed before re-adding.")
+        sources[source.key] = source
     }
 
-    fun removeSource(source: ILocaleSource) {
-        sources.remove(source)
+    fun removeSource(vararg keys: Key) {
+        for (k in keys)
+            sources.remove(k)
     }
 
     init {
@@ -55,11 +59,6 @@ open class LocaleData(
     }
 
     val namespaces: Set<String> get() = _namespaces
-
-    fun addCustomColorTags(tags: Map<String, String>) {
-        customColorTags.putAll(tags)
-        recalculateSerializer()
-    }
 
     fun process(str: String, vararg replacing: LPB): Component {
         return serializer.deserialize(str, *replacing)
@@ -80,7 +79,7 @@ open class LocaleData(
     }
 
     private fun createSerializer(): MiniMessage {
-        val customColorTagsResolvers = customColorTags.mapNotNull { (tag, colorValue) ->
+        val customColorTagsResolvers = _colorTags.mapNotNull { (tag, colorValue) ->
             val color = TextColor.fromCSSHexString(colorValue) ?: return@mapNotNull null
             TagResolver.resolver(tag, Tag.styling(color))
         }
@@ -159,6 +158,11 @@ open class LocaleData(
             }
         }
 
+        if (source is ICustomColorTagsSource)
+            _colorTags.putAll(source.getCustomColorTags())
+
+        recalculateSerializer()
+
         return LoadedStats(keys, namespaces)
     }
 
@@ -167,15 +171,19 @@ open class LocaleData(
     fun loadAll() {
         clearData()
 
-        for (source in sources) {
+        for ((_, source) in sources) {
             source.init()
             loadFromSource(source)
         }
     }
 
+    fun getColorTags(): Map<String, String> {
+        return _colorTags
+    }
+
     /** Добавляет источник и загружает из него данные */
     fun addAndLoad(source: ILocaleSource) {
-        sources.add(source)
+        addSource(source)
         loadFromSource(source)
     }
 
@@ -212,18 +220,14 @@ open class LocaleData(
 
     /** Удаляет все загруженные словари, плейсхолдеры и прочие данные */
     fun clearData() {
+        _colorTags.clear()
         compiledTree.clear()
-        customColorTags.clear()
         _namespaces.clear()
     }
 
     /** Заставляет забыть все подключенные источники данных */
     fun clearSources() {
         sources.clear()
-    }
-
-    fun getCustomColorTags(): Map<String, String> {
-        return customColorTags
     }
 }
 

@@ -8,8 +8,8 @@ import java.io.File
 import java.util.*
 
 class SingleYamlFileTranslationsSource(
+    override val key: Key,
     private val lang: Locale,
-    private val namespace: String,
     private val file: File
 ) : ITranslationsSource {
     private fun compileMap(namespace: String, map: Map<String, Any?>): MutableMap<Key, String> {
@@ -35,6 +35,6 @@ class SingleYamlFileTranslationsSource(
         }
 
         val map: Map<String, Any> = Yaml().load(file.inputStream())
-        return mapOf(lang to compileMap(namespace, map))
+        return mapOf(lang to compileMap(key.namespace(), map))
     }
 }
