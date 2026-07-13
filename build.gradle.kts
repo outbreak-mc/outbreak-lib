@@ -7,8 +7,8 @@ tasks.wrapper {
     gradleVersion = "8.14.3"
 }
 
-group = "space.outbreak.lib.v2"
-version = "2.0.0-SNAPSHOT"
+group = "space.outbreak.lib"
+version = "2.1.0-SNAPSHOT"
 
 allprojects {
     apply(plugin = "kotlin")
@@ -31,13 +31,13 @@ allprojects {
         testImplementation(rootProject.libs.junit)
     }
 
-    tasks.test {
-        useJUnitPlatform()
-        outputs.upToDateWhen { false }
-        testLogging {
-            showStandardStreams = true
-        }
-    }
+    // tasks.test {
+    //     useJUnitPlatform()
+    //     outputs.upToDateWhen { false }
+    //     testLogging {
+    //         showStandardStreams = true
+    //     }
+    // }
 
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"

@@ -10,7 +10,7 @@ group = "${rootProject.group}.paperplugin"
 version = rootProject.version
 
 paper {
-    name = "OutbreakLibV2"
+    name = "OutbreakLib"
     version = rootProject.version.toString()
     description = rootProject.description
     website = "https://outbreak.space"
@@ -55,8 +55,8 @@ dependencies {
     paperLibrary(rootProject.libs.jetbrains.exposed.jdbc)
 
     paperLibrary(rootProject.libs.hikaricp)
-    implementation(rootProject.libs.caffeine)
-    implementation(rootProject.libs.semver)
+    paperLibrary(rootProject.libs.caffeine)
+    paperLibrary(rootProject.libs.semver)
 
     compileOnly(rootProject.libs.commandapi.core)
     compileOnly(rootProject.libs.commandapi.kotlin)
@@ -70,8 +70,8 @@ kotlin {
 }
 
 tasks.shadowJar {
-    relocate("com.github.benmanes", "${rootProject.group}.shaded.benmanes")
-    relocate("org.semver4j", "${rootProject.group}.shaded.semver")
+    // relocate("com.github.benmanes", "${rootProject.group}.shaded.benmanes")
+    // relocate("org.semver4j", "${rootProject.group}.shaded.semver")
 
     exclude("/org/slf4j/")
     exclude("/org/jspecify/")
@@ -82,7 +82,7 @@ tasks.shadowJar {
     }
 
     archiveFileName.set("OutbreakLib-${rootProject.version}.jar")
-    // destinationDirectory.set(file("~/OUTBREAK/test_server/plugins/"))
+    
 }
 
 tasks.assemble {

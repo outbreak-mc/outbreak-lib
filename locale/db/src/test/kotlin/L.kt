@@ -10,6 +10,6 @@ enum class L : IL {
     CUSTOM_COLOR_TAGS,
     ;
 
-    override val langKey: Key = Key.key("outbreaklib", this.name)
-    override val data: LocaleData = LocaleData(langKey)
+    override val translationKey: Key = Key.key("outbreaklib", this.name)
+    override val data: LocaleData = LocaleData(translationKey)
 }

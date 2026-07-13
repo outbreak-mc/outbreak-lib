@@ -10,5 +10,5 @@ dependencies {
     compileOnly(rootProject.libs.adventure.text.minimessage)
     compileOnly(rootProject.libs.adventure.text.logger)
     compileOnly(rootProject.libs.apache.commons.text)
-    implementation(rootProject.libs.semver)
+    compileOnly(rootProject.libs.semver)
 }

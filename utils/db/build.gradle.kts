@@ -9,7 +9,7 @@ dependencies {
     compileOnly(rootProject.libs.jetbrains.exposed.core)
     compileOnly(rootProject.libs.jetbrains.exposed.migration)
     compileOnly(rootProject.libs.hikaricp)
-    implementation(rootProject.libs.semver)
+    compileOnly(rootProject.libs.semver)
     compileOnly(project(":utils"))
 }
 
